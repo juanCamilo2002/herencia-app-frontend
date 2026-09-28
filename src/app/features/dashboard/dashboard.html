@@ -1,0 +1,171 @@
+<section class="page">
+   <header class="page__header">
+    <div>
+      <span class="page__eyebrow">Resumen general</span>
+      <h1 class="page__title">Dashboard</h1>
+      <p class="page__subtitle">
+        Control operativo de ventas, inventario y actividad reciente.
+      </p>
+    </div>
+  </header>
+
+
+  @if (loading()) {
+    <section class="dashboard-panel">
+      <p class="dashboard-panel__muted">Cargando resumen...</p>
+    </section>
+  } @else if (error()) {
+    <section class="dashboard-panel dashboard-panel--error">
+      <h2>No fue posible cargar el dashboard</h2>
+      <p>{{ error() }}</p>
+    </section>
+  } @else if (summary(); as data) {
+    <section class="stats-grid">
+       <app-metric-card
+        label="Ventas hoy"
+        [value]="(data.todaySalesTotal | currency: 'COP' : 'symbol-narrow' : '1.0-0') ?? ''"
+        hint="Ingresos acumulados del día"
+        icon="payments"
+        tone="primary"
+      />
+
+      <app-metric-card
+        label="Ventas del mes"
+        [value]="(data.monthSalesTotal | currency: 'COP' : 'symbol-narrow' : '1.0-0') ?? 0"
+        hint="Rendimiento mensual"
+        icon="trending_up"
+      />
+
+      <app-metric-card
+        label="Ventas realizadas"
+        [value]="data.todaySalesCount"
+        hint="Transacciones registradas hoy"
+        icon="receipt_long"
+      />
+
+      <app-metric-card
+        label="Stock bajo"
+        [value]="data.lowStockProducts.length"
+        hint="Productos por reabastecer"
+        icon="inventory_2"
+        tone="warning"
+      />
+    </section>
+
+    <section class="dashboard-grid">
+      <article class="dashboard-panel">
+        <div class="dashboard-panel__header">
+        <div class="dashboard-panel__title-group">
+          <span class="dashboard-panel__icon">
+            <mat-icon>leaderboard</mat-icon>
+          </span>
+
+          <div>
+            <h2>Productos más vendidos</h2>
+            <p>Rotación principal del inventario.</p>
+          </div>
+        </div>
+      </div>
+
+        @if (data.topSellingProducts.length === 0) {
+          <p class="dashboard-panel__muted">Todavía no hay ventas registradas.</p>
+        } @else {
+          <div class="data-list">
+            @for (product of data.topSellingProducts; track product.productId) {
+              <div class="data-list__row">
+              <div class="data-list__content">
+                <span class="data-list__icon">
+                  <mat-icon>wine_bar</mat-icon>
+                </span>
+
+                <div>
+                  <strong>{{ product.productName }}</strong>
+                  <span>{{ product.quantitySold }} unidades vendidas</span>
+                </div>
+              </div>
+
+              <strong>{{ product.totalSold | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+            </div>
+            }
+          </div>
+        }
+      </article>
+
+      <article class="dashboard-panel">
+        <div class="dashboard-panel__header">
+        <div class="dashboard-panel__title-group">
+          <span class="dashboard-panel__icon">
+            <mat-icon>receipt_long</mat-icon>
+          </span>
+
+          <div>
+            <h2>Últimas ventas</h2>
+            <p>Actividad comercial reciente.</p>
+          </div>
+        </div>
+      </div>
+
+        @if (data.recentSales.length === 0) {
+          <p class="dashboard-panel__muted">Todavía no hay ventas recientes.</p>
+        } @else {
+          <div class="data-list">
+            @for (sale of data.recentSales; track sale.saleId) {
+              <div class="data-list__row">
+              <div class="data-list__content">
+                <span class="data-list__icon">
+                  <mat-icon>point_of_sale</mat-icon>
+                </span>
+
+                <div>
+                  <strong>{{ sale.customerName }}</strong>
+                  <span>{{ sale.saleDateTime | date: 'dd/MM/yyyy HH:mm' }}</span>
+                </div>
+              </div>
+
+              <strong>{{ sale.total | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+            </div>
+            }
+          </div>
+        }
+      </article>
+    </section>
+
+    <article class="dashboard-panel">
+      <div class="dashboard-panel__header">
+      <div class="dashboard-panel__title-group">
+        <span class="dashboard-panel__icon dashboard-panel__icon--warning">
+          <mat-icon>warning</mat-icon>
+        </span>
+
+        <div>
+          <h2>Productos con stock bajo</h2>
+          <p>Revisión rápida de inventario crítico.</p>
+        </div>
+      </div>
+    </div>
+
+      @if (data.lowStockProducts.length === 0) {
+        <p class="dashboard-panel__muted">No hay productos con stock bajo.</p>
+      } @else {
+        <div class="data-list data-list--columns">
+          @for (product of data.lowStockProducts; track product.productId) {
+            <div class="data-list__row">
+            <div class="data-list__content">
+              <span class="data-list__icon data-list__icon--warning">
+                <mat-icon>inventory_2</mat-icon>
+              </span>
+
+              <div>
+                <strong>{{ product.name }}</strong>
+                <span>Stock mínimo: {{ product.minimumStock }}</span>
+              </div>
+            </div>
+
+            <strong>{{ product.stock }} unidades</strong>
+          </div>
+          }
+        </div>
+      }
+    </article>
+  }
+</section>

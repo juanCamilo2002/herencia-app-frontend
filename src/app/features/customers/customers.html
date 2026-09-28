@@ -1,0 +1,219 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <span class="page__eyebrow">Relaciones comerciales</span>
+      <h1 class="page__title">Clientes</h1>
+      <p class="page__subtitle">
+        Administra los clientes registrados para ventas, contacto e historial comercial.
+      </p>
+    </div>
+
+    <div class="page__actions">
+      @if (canCreateCustomer()) {
+      <button mat-flat-button type="button" (click)="openCreateCustomerDialog()">
+        <mat-icon>person_add</mat-icon>
+        Nuevo cliente
+      </button>
+      }
+    </div>
+  </header>
+
+  @if (loading()) {
+  <section class="data-panel">
+    <p class="data-panel__muted">Cargando clientes...</p>
+  </section>
+  } @else if (error()) {
+  <section class="data-panel data-panel--error">
+    <h2>No fue posible cargar clientes</h2>
+    <p>{{ error() }}</p>
+  </section>
+  } @else {
+  <section class="data-stats">
+    <app-metric-card label="Total clientes" [value]="totalCustomers()" hint="Clientes activos registrados" icon="groups"
+      tone="primary" />
+
+    <app-metric-card label="Con email" [value]="customersWithEmail()" hint="Clientes con correo registrado" icon="mail"
+      tone="success" />
+
+    <app-metric-card label="Con teléfono" [value]="customersWithPhone()" hint="Clientes con número de contacto"
+      icon="call" />
+
+    <app-metric-card label="Sin contacto" [value]="customersWithoutContact()" hint="Sin email ni teléfono"
+      icon="contact_support" tone="warning" />
+  </section>
+
+  <section class="data-panel">
+    <div class="data-panel__header">
+      <div class="data-panel__title-group">
+        <span class="data-panel__icon">
+          <mat-icon>groups</mat-icon>
+        </span>
+
+        <div>
+          <h2>Registro de clientes</h2>
+          <p>Listado actual de clientes activos para ventas y seguimiento.</p>
+        </div>
+      </div>
+    </div>
+
+    @if (customers().length === 0) {
+    <div class="empty-state">
+      <span class="empty-state__icon">
+        <mat-icon>person_add</mat-icon>
+      </span>
+      <h3>No hay clientes registrados</h3>
+      <p>Cuando agregues clientes aparecerán aquí.</p>
+    </div>
+    } @else {
+    <div class="data-table data-table--md data-table--actions-end">
+      <table mat-table matSort [dataSource]="sortedCustomers()" [matSortActive]="sort().active"
+        [matSortDirection]="sort().direction" (matSortChange)="sortCustomers($event)">
+        <ng-container matColumnDef="customer">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="name">Cliente</th>
+          <td mat-cell *matCellDef="let customer">
+            <div class="data-cell">
+              <span class="data-cell__icon">
+                <mat-icon>person</mat-icon>
+              </span>
+
+              <div>
+                <strong>{{ customer.name }}</strong>
+                <small>ID {{ customer.id.slice(0, 8) }}</small>
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="document">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="document">Documento</th>
+          <td mat-cell *matCellDef="let customer">
+            {{ customer.document || 'Sin documento' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="phone">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="phone">Teléfono</th>
+          <td mat-cell *matCellDef="let customer">
+            {{ customer.phone || 'Sin teléfono' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="email">Email</th>
+          <td mat-cell *matCellDef="let customer">
+            {{ customer.email || 'Sin email' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="address">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="address">Dirección</th>
+          <td mat-cell *matCellDef="let customer">
+            {{ customer.address || 'Sin dirección' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let customer">
+            <button mat-icon-button type="button" [matMenuTriggerFor]="customerMenu">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+
+            <mat-menu #customerMenu="matMenu">
+              @if (canUpdateCustomer()) {
+              <button mat-menu-item type="button" (click)="openEditCustomerDialog(customer)">
+                <mat-icon>edit</mat-icon>
+                <span>Editar</span>
+              </button>
+              }
+
+              @if (canDeleteCustomer()) {
+              <button class="menu-item-danger" mat-menu-item type="button" (click)="confirmDeleteCustomer(customer)">
+                <mat-icon>delete</mat-icon>
+                <span>Eliminar</span>
+              </button>
+              }
+            </mat-menu>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns()"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns()"></tr>
+      </table>
+      <mat-paginator
+        [length]="totalElements()"
+        [pageIndex]="pageIndex()"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="[10, 20, 50]"
+        showFirstLastButtons
+        (page)="pageChanged($event)"
+      />
+    </div>
+
+    <div class="data-mobile-list">
+      @for (customer of sortedCustomers(); track customer.id) {
+      <article class="data-card">
+        <div class="data-card__header">
+          <div class="data-cell">
+            <span class="data-cell__icon">
+              <mat-icon>person</mat-icon>
+            </span>
+
+            <div>
+              <strong>{{ customer.name }}</strong>
+              <small>{{ customer.document || 'Sin documento' }}</small>
+            </div>
+          </div>
+
+          <button mat-icon-button type="button" [matMenuTriggerFor]="mobileCustomerMenu">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+
+          <mat-menu #mobileCustomerMenu="matMenu">
+            @if (canUpdateCustomer()) {
+            <button mat-menu-item type="button" (click)="openEditCustomerDialog(customer)">
+              <mat-icon>edit</mat-icon>
+              <span>Editar</span>
+            </button>
+            }
+
+            @if (canDeleteCustomer()) {
+            <button class="menu-item-danger" mat-menu-item type="button" (click)="confirmDeleteCustomer(customer)">
+              <mat-icon>delete</mat-icon>
+              <span>Eliminar</span>
+            </button>
+            }
+          </mat-menu>
+        </div>
+
+        <div class="data-card__grid">
+          <div>
+            <span>Teléfono</span>
+            <strong>{{ customer.phone || 'Sin teléfono' }}</strong>
+          </div>
+
+          <div>
+            <span>Email</span>
+            <strong>{{ customer.email || 'Sin email' }}</strong>
+          </div>
+
+          <div>
+            <span>Dirección</span>
+            <strong>{{ customer.address || 'Sin dirección' }}</strong>
+          </div>
+        </div>
+      </article>
+      }
+      <mat-paginator
+      [length]="totalElements()"
+      [pageIndex]="pageIndex()"
+      [pageSize]="pageSize()"
+      [pageSizeOptions]="[10, 20, 50]"
+      showFirstLastButtons
+      (page)="pageChanged($event)"
+    />
+    </div>
+    }
+  </section>
+  }
+</section>

@@ -1,0 +1,21 @@
+<mat-sidenav-container class="shell">
+    <mat-sidenav 
+        class="shell__sidebar" 
+        [mode]="sidenavMode()" 
+        [opened]="sidenavOpened()"
+        (closedStart)="mobileSidebarOpened.set(false)"
+    >
+        <app-sidebar (navigate)="closeMobileSidebar()"/>
+    </mat-sidenav>
+
+    <mat-sidenav-content class="shell__content">
+        <app-topbar 
+            [showMenuButton]="isMobile()"
+            (menuClick)="openMobileSidebar()"
+        />
+
+        <main class="shell__main">
+            <router-outlet />
+        </main>
+    </mat-sidenav-content>
+</mat-sidenav-container>

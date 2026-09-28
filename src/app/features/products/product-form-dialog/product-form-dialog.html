@@ -1,0 +1,118 @@
+<section class="app-form-dialog">
+  <header class="app-form-dialog__header">
+    <div>
+      <span>Catálogo</span>
+      <h2>{{ isEdit ? 'Editar producto' : 'Nuevo producto'}}</h2>
+      <p>{{ isEdit
+          ? 'Actualiza los datos comerciales del producto. El stock se gestiona desde inventario.'
+          : 'Registra un vino con su precio, bodega, cepa y stock inicial.'
+        }}
+      </p>
+    </div>
+
+    <button mat-icon-button type="button" aria-label="Cerrar" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </header>
+
+  <form class="app-form-dialog__form" [formGroup]="form" (ngSubmit)="submit()">
+    <mat-form-field appearance="outline" class="app-form-dialog__field--full">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="name" autocomplete="off" />
+
+      @if (hasError('name', 'required')) {
+        <mat-error>El nombre es obligatorio.</mat-error>
+      }
+
+      @if (hasError('name', 'maxlength')) {
+        <mat-error>Máximo 120 caracteres.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Bodega</mat-label>
+      <input matInput formControlName="winery" autocomplete="off" />
+
+      @if (hasError('winery', 'maxlength')) {
+        <mat-error>Máximo 120 caracteres.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Cepa</mat-label>
+      <input matInput formControlName="grapeVariety" autocomplete="off" />
+
+      @if (hasError('grapeVariety', 'maxlength')) {
+        <mat-error>Máximo 80 caracteres.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Año</mat-label>
+      <input matInput type="number" formControlName="vintage" />
+
+      @if (hasError('vintage', 'min')) {
+        <mat-error>El año debe ser mayor o igual a 1900.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Precio</mat-label>
+      <input matInput type="number" formControlName="price" />
+
+      @if (hasError('price', 'required')) {
+        <mat-error>El precio es obligatorio.</mat-error>
+      }
+
+      @if (hasError('price', 'min')) {
+        <mat-error>El precio debe ser mayor a 0.</mat-error>
+      }
+    </mat-form-field>
+
+    @if (!isEdit) {
+      <mat-form-field appearance="outline">
+        <mat-label>Stock inicial</mat-label>
+        <input matInput type="number" formControlName="stock" />
+  
+        @if (hasError('stock', 'required')) {
+          <mat-error>El stock inicial es obligatorio.</mat-error>
+        }
+  
+        @if (hasError('stock', 'min')) {
+          <mat-error>El stock no puede ser negativo.</mat-error>
+        }
+      </mat-form-field>
+    }
+
+    <mat-form-field appearance="outline">
+      <mat-label>Stock mínimo</mat-label>
+      <input matInput type="number" formControlName="minimumStock" />
+
+      @if (hasError('minimumStock', 'required')) {
+        <mat-error>El stock mínimo es obligatorio.</mat-error>
+      }
+
+      @if (hasError('minimumStock', 'min')) {
+        <mat-error>El stock mínimo no puede ser negativo.</mat-error>
+      }
+    </mat-form-field>
+
+    @if (error()) {
+      <p class="app-form-dialog__error">{{ error() }}</p>
+    }
+
+    <footer class="app-form-dialog__actions">
+      <button mat-button type="button" [disabled]="saving()" (click)="close()">
+        Cancelar
+      </button>
+
+      <button mat-flat-button type="submit" [disabled]="saving()">
+        @if (saving()) {
+          Guardando...
+        } @else {
+          {{ isEdit ? 'Guardar cambios' : 'Crear producto'}}
+        }
+      </button>
+    </footer>
+  </form>
+</section>

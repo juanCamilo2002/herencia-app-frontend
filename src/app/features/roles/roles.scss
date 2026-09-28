@@ -1,0 +1,19 @@
+:host {
+  display: block;
+}
+
+.role-card-actions {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.role-card-actions button {
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.role-card-actions__danger {
+  color: var(--color-danger);
+  border-color: rgba(220, 38, 38, 0.35);
+}

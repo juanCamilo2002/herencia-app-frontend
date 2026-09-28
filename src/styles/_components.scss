@@ -1,0 +1,93 @@
+.app-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.panel {
+  padding: 22px;
+}
+
+.panel__title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 18px;
+  font-weight: 740;
+}
+
+.panel__subtitle {
+  margin: 6px 0 0;
+  color: var(--color-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.app-dialog-panel {
+  --mat-dialog-container-shape: 8px;
+}
+
+.app-dialog-panel .mat-mdc-dialog-surface {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+:root {
+  --button-radius: 6px;
+}
+
+.mat-mdc-button,
+.mat-mdc-unelevated-button,
+.mat-mdc-raised-button,
+.mat-mdc-outlined-button {
+  --mdc-text-button-container-shape: var(--button-radius);
+  --mdc-filled-button-container-shape: var(--button-radius);
+  --mdc-protected-button-container-shape: var(--button-radius);
+  --mdc-outlined-button-container-shape: var(--button-radius);
+
+  min-height: 40px;
+  border-radius: var(--button-radius) !important;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.mat-mdc-unelevated-button {
+  box-shadow: none;
+}
+
+.menu-item-danger {
+  --mat-menu-item-label-text-color: var(--color-danger);
+  --mat-menu-item-icon-color: var(--color-danger);
+
+  color: var(--color-danger);
+}
+
+.menu-item-danger mat-icon {
+  color: var(--color-danger) !important;
+}
+
+.menu-item-danger:hover {
+  --mat-menu-item-label-text-color: var(--color-danger);
+  --mat-menu-item-icon-color: var(--color-danger);
+}
+
+.mat-mdc-snack-bar-container {
+  --mat-snack-bar-container-shape: 6px;
+  --mat-snack-bar-supporting-text-font: Inter, Roboto, Arial, sans-serif;
+  --mat-snack-bar-button-color: #ffffff;
+}
+
+.toast-success {
+  --mat-snack-bar-container-color: #166534;
+  --mat-snack-bar-supporting-text-color: #ffffff;
+}
+
+.toast-error {
+  --mat-snack-bar-container-color: #991b1b;
+  --mat-snack-bar-supporting-text-color: #ffffff;
+}
+
+.toast-info {
+  --mat-snack-bar-container-color: #1e3a8a;
+  --mat-snack-bar-supporting-text-color: #ffffff;
+}

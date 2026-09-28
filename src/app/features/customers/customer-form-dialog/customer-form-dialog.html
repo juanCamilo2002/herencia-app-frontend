@@ -1,0 +1,92 @@
+<section class="app-form-dialog">
+  <header class="app-form-dialog__header">
+    <div>
+      <span>Clientes</span>
+      <h2>{{ isEdit ? 'Editar cliente' :  'Nuevo cliente'}}</h2>
+      <p>
+        {{
+          isEdit
+            ? 'Actualiza los datos comerciales del cliente.'
+            : 'Registra un nuevo cliente para ventas y seguimiento'
+        }}
+      </p>
+    </div>
+
+    <button mat-icon-button type="button" aria-label="Cerrar" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </header>
+
+  <form class="app-form-dialog__form" [formGroup]="form" (ngSubmit)="submit()">
+    <mat-form-field appearance="outline" class="app-form-dialog__field--full">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="name" autocomplete="off" />
+
+      @if (hasError('name', 'required')) {
+        <mat-error>El nombre es obligatorio.</mat-error>
+      }
+
+      @if (hasError('name', 'maxlength')) {
+        <mat-error>Máximo 160 caracteres.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Documento</mat-label>
+      <input matInput formControlName="document" autocomplete="off" />
+
+      @if (hasError('document', 'maxlength')) {
+        <mat-error>Máximo 40 caracteres.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Teléfono</mat-label>
+      <input matInput formControlName="phone" autocomplete="off" />
+
+      @if (hasError('phone', 'maxlength')) {
+        <mat-error>Máximo 40 caracteres.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="app-form-dialog__field--full">
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email" autocomplete="off" />
+
+      @if (hasError('email', 'email')) {
+        <mat-error>Ingresa un email válido.</mat-error>
+      }
+
+      @if (hasError('email', 'maxlength')) {
+        <mat-error>Máximo 120 caracteres.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Dirección</mat-label>
+      <textarea matInput formControlName="address" rows="3"></textarea>
+
+      @if (hasError('address', 'maxlength')) {
+        <mat-error>Máximo 255 caracteres.</mat-error>
+      }
+    </mat-form-field>
+
+    @if (error()) {
+      <p class="app-form-dialog__error">{{ error() }}</p>
+    }
+
+    <footer class="app-form-dialog__actions">
+      <button mat-button type="button" [disabled]="saving()" (click)="close()">
+        Cancelar
+      </button>
+
+      <button mat-flat-button type="submit" [disabled]="saving()">
+        @if (saving()) {
+          Guardando...
+        } @else {
+          {{ isEdit ? 'Guardar cambios' : 'Crear cliente' }}
+        }
+      </button>
+    </footer>
+  </form>
+</section>

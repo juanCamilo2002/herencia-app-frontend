@@ -1,0 +1,111 @@
+:host {
+  display: block;
+}
+
+.login-page {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 34%),
+    var(--color-background);
+}
+
+.login-card {
+  width: min(440px, 100%);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.login-card__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 26px 28px 22px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.login-card__mark {
+  display: grid;
+  place-items: center;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  border-radius: 6px;
+  background: var(--color-primary);
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.login-card__header span {
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.login-card__header h1 {
+  margin: 5px 0 0;
+  color: var(--color-text);
+  font-size: 28px;
+  font-weight: 780;
+  letter-spacing: -0.04em;
+}
+
+.login-card__header p {
+  margin: 8px 0 0;
+  color: var(--color-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.login-card__form {
+  display: grid;
+  gap: 16px;
+  padding: 24px 28px 28px;
+}
+
+.login-card__error {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(220, 38, 38, 0.24);
+  border-radius: 6px;
+  background: rgba(220, 38, 38, 0.06);
+  color: var(--color-danger);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.login-card__form > button {
+  min-height: 44px;
+}
+
+.login-card__link {
+  justify-self: end;
+  color: var(--color-primary);
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.login-card__link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 520px) {
+  .login-page {
+    padding: 16px;
+  }
+
+  .login-card__header,
+  .login-card__form {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}

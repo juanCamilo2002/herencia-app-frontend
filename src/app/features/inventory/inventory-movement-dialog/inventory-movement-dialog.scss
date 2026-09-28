@@ -1,0 +1,15 @@
+:host {
+  display: block;
+}
+
+.movement-dialog__stock-summary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding: 14px;
+}
+
+@media (max-width: 720px) {
+  .movement-dialog__stock-summary {
+    grid-template-columns: 1fr;
+  }
+}

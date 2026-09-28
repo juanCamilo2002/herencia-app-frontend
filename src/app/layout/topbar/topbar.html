@@ -1,0 +1,27 @@
+<header class="topbar">
+  <div class="topbar__start">
+    @if (showMenuButton()) {
+      <button
+        class="topbar__menu-button"
+        mat-icon-button
+        type="button"
+        aria-label="Abrir menú de navegación"
+        (click)="menuClick.emit()"
+      >
+        <mat-icon>menu</mat-icon>
+      </button>
+    }
+
+    <div>
+      <span class="topbar__eyebrow">Administración</span>
+      <h1>Herencia</h1>
+    </div>
+  </div>
+
+  <div class="topbar__actions">
+    <div class="topbar__pill">
+      <mat-icon>storefront</mat-icon>
+      <span>Bodega principal</span>
+    </div>
+  </div>
+</header>

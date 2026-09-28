@@ -1,0 +1,11 @@
+:host {
+  display: block;
+}
+
+.movement-dialog__stock-summary {
+  grid-column: 1 / -1;
+}
+
+.movement-dialog__inline-error {
+  grid-column: 1 / -1;
+}

@@ -1,0 +1,193 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <span class="page__eyebrow">Operación</span>
+      <h1 class="page__title">Inventario insumos</h1>
+      <p class="page__subtitle">
+        Consulta y registra movimientos manuales de materia prima e insumos.
+      </p>
+    </div>
+
+    <div class="page__actions">
+      @if (canCreateMovement()) {
+      <button mat-flat-button type="button" (click)="openCreateMovementDialog()">
+        <mat-icon>add</mat-icon>
+        Nuevo movimiento
+      </button>
+      }
+    </div>
+  </header>
+
+  @if (loading()) {
+  <section class="data-panel">
+    <p class="data-panel__muted">Cargando movimientos...</p>
+  </section>
+  } @else if (error()) {
+  <section class="data-panel data-panel--error">
+    <h2>No fue posible cargar inventario de insumos</h2>
+    <p>{{ error() }}</p>
+  </section>
+  } @else {
+  <section class="data-stats">
+    <app-metric-card label="Movimientos" [value]="totalMovements()" hint="Registros históricos de insumos"
+      icon="sync_alt" tone="primary" />
+
+    <app-metric-card label="Entradas" [value]="inboundMovements()" hint="Incrementos de inventario" icon="add_box"
+      tone="success" />
+
+    <app-metric-card label="Salidas" [value]="outboundMovements()" hint="Consumos o descuentos de insumos"
+      icon="indeterminate_check_box" tone="warning" />
+
+    <app-metric-card label="Ajustes" [value]="adjustmentMovements()" hint="Correcciones manuales de stock"
+      icon="tune" />
+
+    <app-metric-card label="Mermas" [value]="lossMovements()" hint="Insumos perdidos o dañados" icon="report_problem"
+      tone="danger" />
+  </section>
+
+  <section class="data-panel">
+    <div class="data-panel__header">
+      <div class="data-panel__title-group">
+        <span class="data-panel__icon">
+          <mat-icon>warehouse</mat-icon>
+        </span>
+
+        <div>
+          <h2>Movimientos de insumos</h2>
+          <p>Historial ordenado desde el movimiento más reciente.</p>
+        </div>
+      </div>
+    </div>
+
+    @if (movements().length === 0) {
+    <div class="empty-state">
+      <span class="empty-state__icon">
+        <mat-icon>warehouse</mat-icon>
+      </span>
+      <h3>No hay movimientos registrados</h3>
+      <p>Cuando se registren entradas, salidas o ajustes de insumos aparecerán aquí.</p>
+    </div>
+    } @else {
+    <div class="data-table data-table--lg">
+      <table mat-table [dataSource]="movements()">
+        <ng-container matColumnDef="movement">
+          <th mat-header-cell *matHeaderCellDef>Movimiento</th>
+          <td mat-cell *matCellDef="let movement">
+            <span class="movement-badge" [class]="movementTone(movement.type)">
+              {{ movementLabel(movement.type) }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="supply">
+          <th mat-header-cell *matHeaderCellDef>Insumo</th>
+          <td mat-cell *matCellDef="let movement">
+            <div class="inventory-supply">
+              <strong>{{ movement.supplyName }}</strong>
+              <small>{{ unitLabel(movement.supplyUnit) }} · ID {{ movement.supplyId.slice(0, 8) }}</small>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="quantity">
+          <th mat-header-cell *matHeaderCellDef>Cantidad</th>
+          <td mat-cell *matCellDef="let movement">
+            <strong>{{ movement.quantity | number: '1.0-3' }}</strong>
+            <small>{{ movementDelta(movement) }}</small>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="stock">
+          <th mat-header-cell *matHeaderCellDef>Stock</th>
+          <td mat-cell *matCellDef="let movement">
+            <strong>
+              {{ movement.previousStock | number: '1.0-3' }}
+              →
+              {{ movement.newStock | number: '1.0-3' }}
+            </strong>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="source">
+          <th mat-header-cell *matHeaderCellDef>Origen</th>
+          <td mat-cell *matCellDef="let movement">
+            {{ sourceLabel(movement.sourceType) }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="reason">
+          <th mat-header-cell *matHeaderCellDef>Motivo</th>
+          <td mat-cell *matCellDef="let movement">
+            {{ movement.reason || 'Sin motivo' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="movementDateTime">
+          <th mat-header-cell *matHeaderCellDef>Fecha movimiento</th>
+          <td mat-cell *matCellDef="let movement">
+            {{ movement.movementDateTime | date: 'dd/MM/yyyy HH:mm' }}
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+
+      <mat-paginator [length]="totalElements()" [pageIndex]="pageIndex()" [pageSize]="pageSize()"
+        [pageSizeOptions]="[10, 20, 50]" showFirstLastButtons (page)="pageChanged($event)" />
+    </div>
+
+    <div class="data-mobile-list">
+      @for (movement of movements(); track movement.id) {
+      <article class="data-card">
+        <div class="data-card__header">
+          <span class="movement-badge" [class]="movementTone(movement.type)">
+            <mat-icon>{{ movementIcon(movement.type) }}</mat-icon>
+            {{ movementLabel(movement.type) }}
+          </span>
+
+          <span class="movement-card__date">
+            {{ movement.movementDateTime | date: 'dd/MM/yyyy HH:mm' }}
+          </span>
+        </div>
+
+        <div class="movement-card__supply">
+          <strong>{{ movement.supplyName }}</strong>
+          <small>{{ unitLabel(movement.supplyUnit) }} · ID {{ movement.supplyId.slice(0, 8) }}</small>
+        </div>
+
+        <div class="data-card__grid">
+          <div>
+            <span>Cantidad</span>
+            <strong>{{ movement.quantity | number: '1.0-3' }} ({{ movementDelta(movement) }})</strong>
+          </div>
+
+          <div>
+            <span>Stock</span>
+            <strong>
+              {{ movement.previousStock | number: '1.0-3' }}
+              →
+              {{ movement.newStock | number: '1.0-3' }}
+            </strong>
+          </div>
+
+          <div>
+            <span>Origen</span>
+            <strong>{{ sourceLabel(movement.sourceType) }}</strong>
+          </div>
+
+          <div>
+            <span>Motivo</span>
+            <strong>{{ movement.reason || 'Sin motivo' }}</strong>
+          </div>
+        </div>
+      </article>
+      }
+
+      <mat-paginator [length]="totalElements()" [pageIndex]="pageIndex()" [pageSize]="pageSize()"
+        [pageSizeOptions]="[10, 20, 50]" showFirstLastButtons (page)="pageChanged($event)" />
+    </div>
+    }
+  </section>
+  }
+</section>

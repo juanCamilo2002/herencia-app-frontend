@@ -1,0 +1,35 @@
+.shell {
+  height: 100dvh;
+  min-height: 100dvh;
+  background: var(--color-background);
+
+  --mat-sidenav-container-shape: 0;
+}
+
+.shell__sidebar {
+  width: var(--sidebar-width);
+  border: 0;
+  border-radius: 0 !important;
+  background: var(--color-sidebar);
+  color: #ffffff;
+}
+
+.shell__content {
+  height: 100dvh;
+  overflow-y: auto;
+  background: var(--color-background);
+}
+
+.shell__main {
+  padding: 28px;
+}
+
+@media (max-width: 900px) {
+  .shell__sidebar {
+    width: min(var(--sidebar-width), 82vw);
+  }
+
+  .shell__main {
+    padding: 18px;
+  }
+}

@@ -1,0 +1,39 @@
+:host {
+  display: block;
+}
+
+.sale-card__total {
+  margin-top: 18px;
+  color: var(--color-text);
+  font-size: 24px;
+  font-weight: 780;
+  letter-spacing: -0.04em;
+}
+
+.sale-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.sales-table table {
+  min-width: 1180px;
+}
+
+.sales-table .mat-column-sale {
+  width: 200px;
+  min-width: 200px;
+}
+
+.sales-table .mat-column-actions {
+  width: 56px;
+  min-width: 56px;
+}
+
+@media (max-width: 720px) {
+  .sale-card__actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

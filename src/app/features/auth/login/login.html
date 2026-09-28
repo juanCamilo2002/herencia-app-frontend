@@ -1,0 +1,59 @@
+<section class="login-page">
+  <article class="login-card">
+    <header class="login-card__header">
+      <div class="login-card__mark">H</div>
+
+      <div>
+        <span>Administración</span>
+        <h1>Herencia</h1>
+        <p>Ingresa con tu usuario para gestionar la operación.</p>
+      </div>
+    </header>
+
+    <form class="login-card__form" [formGroup]="form" (ngSubmit)="submit()">
+      @if (error()) {
+      <p class="login-card__error">{{ error() }}</p>
+      }
+
+      <mat-form-field appearance="outline">
+        <mat-label>Email</mat-label>
+        <input matInput type="email" formControlName="email" autocomplete="email" />
+
+        @if (hasError('email', 'required')) {
+        <mat-error>El email es obligatorio.</mat-error>
+        }
+
+        @if (hasError('email', 'email')) {
+        <mat-error>Ingresa un email válido.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Contraseña</mat-label>
+        <input matInput [type]="hidePassword() ? 'password' : 'text'" formControlName="password"
+          autocomplete="current-password" />
+
+        <button mat-icon-button matSuffix type="button"
+          [attr.aria-label]="hidePassword() ? 'Mostrar contraseña' : 'Ocultar contraseña'"
+          (click)="togglePasswordVisibility()">
+          <mat-icon>{{ hidePassword() ? 'visibility' : 'visibility_off' }}</mat-icon>
+        </button>
+
+        @if (hasError('password', 'required')) {
+        <mat-error>La contraseña es obligatoria.</mat-error>
+        }
+      </mat-form-field>
+      <a class="login-card__link" routerLink="/forgot-password">
+        ¿Olvidaste tu contraseña?
+      </a>
+
+      <button mat-flat-button type="submit" [disabled]="saving()">
+        @if (saving()) {
+        Ingresando...
+        } @else {
+        Ingresar
+        }
+      </button>
+    </form>
+  </article>
+</section>

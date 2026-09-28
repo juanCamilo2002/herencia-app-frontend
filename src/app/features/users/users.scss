@@ -1,0 +1,15 @@
+:host {
+  display: block;
+}
+
+.users-card__identity {
+  align-items: flex-start;
+}
+
+.users-card__email {
+  display: block;
+  margin-top: 8px;
+  color: var(--color-muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}

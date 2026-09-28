@@ -1,0 +1,62 @@
+<aside class="sidebar">
+  <div class="sidebar__brand">
+    <div class="sidebar__mark">H</div>
+    <div>
+      <strong>Herencia</strong>
+      <span>Wine Management</span>
+    </div>
+  </div>
+
+  <nav class="sidebar__nav">
+    @for (entry of visibleEntries(); track entry.type === 'group' ? entry.id : entry.route) {
+    @if (!isGroup(entry)) {
+    <a class="sidebar__link" [routerLink]="entry.route" routerLinkActive="sidebar__link--active"
+      (click)="navigate.emit()">
+      <mat-icon>{{ entry.icon }}</mat-icon>
+      <span>{{ entry.label }}</span>
+    </a>
+    } @else {
+    <section class="sidebar__group" [class.sidebar__group--open]="isGroupOpen(entry.id)">
+      <button class="sidebar__group-trigger" type="button" (click)="toggleGroup(entry.id)"
+        [attr.aria-expanded]="isGroupOpen(entry.id)">
+        <span class="sidebar__group-title">
+          <mat-icon>{{ entry.icon }}</mat-icon>
+          <span>{{ entry.label }}</span>
+        </span>
+
+        <mat-icon class="sidebar__group-chevron">expand_more</mat-icon>
+      </button>
+
+      @if (isGroupOpen(entry.id)) {
+      <div class="sidebar__group-items">
+        @for (item of entry.items; track item.route) {
+        <a class="sidebar__link sidebar__link--child" [routerLink]="item.route" routerLinkActive="sidebar__link--active"
+          (click)="navigate.emit()">
+          <mat-icon>{{ item.icon }}</mat-icon>
+          <span>{{ item.label }}</span>
+        </a>
+        }
+      </div>
+      }
+    </section>
+    }
+    }
+  </nav>
+
+  @if (user(); as currentUser) {
+  <section class="sidebar__account">
+    <div class="sidebar__avatar">
+      {{ userInitial(currentUser.name) }}
+    </div>
+
+    <div class="sidebar__account-info">
+      <strong>{{ currentUser.name }}</strong>
+      <span>{{ currentUser.role.name }}</span>
+    </div>
+
+    <button mat-icon-button type="button" aria-label="Cerrar sesión" (click)="logout()">
+      <mat-icon>logout</mat-icon>
+    </button>
+  </section>
+  }
+</aside>

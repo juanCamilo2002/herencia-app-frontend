@@ -1,0 +1,111 @@
+<section class="app-form-dialog">
+  <header class="app-form-dialog__header">
+    <div>
+      <span>Usuarios</span>
+      <h2>{{ isEdit ? 'Editar usuario' : 'Nuevo usuario' }}</h2>
+      <p>
+        {{
+          isEdit
+            ? 'Actualiza los datos de acceso y rol del usuario.'
+            : 'Crea una cuenta para permitir acceso al sistema.'
+        }}
+      </p>
+    </div>
+
+    <button mat-icon-button type="button" aria-label="Cerrar" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </header>
+
+  <form class="app-form-dialog__form" [formGroup]="form" (ngSubmit)="submit()">
+    <mat-form-field appearance="outline" class="app-form-dialog__field--full">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="name" autocomplete="off" />
+
+      @if (hasError('name', 'required')) {
+        <mat-error>El nombre es obligatorio.</mat-error>
+      }
+
+      @if (hasError('name', 'maxlength')) {
+        <mat-error>Máximo 120 caracteres.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email" autocomplete="off" />
+
+      @if (hasError('email', 'required')) {
+        <mat-error>El email es obligatorio.</mat-error>
+      }
+
+      @if (hasError('email', 'email')) {
+        <mat-error>Ingresa un email válido.</mat-error>
+      }
+
+      @if (hasError('email', 'maxlength')) {
+        <mat-error>Máximo 160 caracteres.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Rol</mat-label>
+      <mat-select formControlName="roleId" [disabled]="loadingRoles()">
+        @for (role of roles(); track role.id) {
+          <mat-option [value]="role.id">
+            {{ role.name }} · {{ role.code }}
+          </mat-option>
+        }
+      </mat-select>
+
+      @if (hasError('roleId', 'required')) {
+        <mat-error>El rol es obligatorio.</mat-error>
+      }
+    </mat-form-field>
+
+    @if (!isEdit) {
+      <mat-form-field appearance="outline" class="app-form-dialog__field--full">
+        <mat-label>Contraseña</mat-label>
+        <input matInput type="password" formControlName="password" autocomplete="new-password" />
+
+        @if (hasError('password', 'required')) {
+          <mat-error>La contraseña es obligatoria.</mat-error>
+        }
+
+        @if (hasError('password', 'strongPassword')) {
+          <mat-error>Debe tener 12 caracteres, mayúscula, minúscula, número y símbolo.</mat-error>
+        }
+      </mat-form-field>
+    }
+
+    @if (isEdit) {
+      <div class="app-form-dialog__status">
+        <mat-slide-toggle formControlName="active">
+          Usuario activo
+        </mat-slide-toggle>
+
+        <p>
+          Si desactivas el usuario, no podrá iniciar sesión ni operar en el sistema.
+        </p>
+      </div>
+    }
+
+    @if (error()) {
+      <p class="app-form-dialog__error">{{ error() }}</p>
+    }
+
+    <footer class="app-form-dialog__actions">
+      <button mat-button type="button" [disabled]="saving()" (click)="close()">
+        Cancelar
+      </button>
+
+      <button mat-flat-button type="submit" [disabled]="saving() || loadingRoles()">
+        @if (saving()) {
+          Guardando...
+        } @else {
+          {{ isEdit ? 'Guardar cambios' : 'Crear usuario' }}
+        }
+      </button>
+    </footer>
+  </form>
+</section>

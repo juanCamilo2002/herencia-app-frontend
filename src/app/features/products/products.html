@@ -1,0 +1,242 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <span class="page__eyebrow">Catálogo</span>
+      <h1 class="page__title">Productos</h1>
+      <p class="page__subtitle">
+        Administra el catálogo de vinos, precios y disponibilidad actual.
+      </p>
+    </div>
+
+    <div class="page__actions">
+      @if (canCreateProduct()) {
+      <button mat-flat-button type="button" (click)="openCreateProductDialog()">
+        <mat-icon>add</mat-icon>
+        Nuevo producto
+      </button>
+      }
+    </div>
+  </header>
+
+  @if (loading()) {
+  <section class="data-panel">
+    <p class="data-panel__muted">Cargando productos...</p>
+  </section>
+  } @else if (error()) {
+  <section class="data-panel data-panel--error">
+    <h2>No fue posible cargar productos</h2>
+    <p>{{ error() }}</p>
+  </section>
+  } @else {
+  <section class="data-stats">
+    <app-metric-card label="Total productos" [value]="totalProducts()" hint="Productos activos en catálogo"
+      icon="wine_bar" tone="primary" />
+
+    <app-metric-card label="Stock bajo" [value]="lowStockProducts()" hint="Productos por reabastecer" icon="inventory_2"
+      tone="warning" />
+
+    <app-metric-card label="Unidades disponibles" [value]="availableUnits()" hint="Inventario total disponible"
+      icon="warehouse" />
+
+    <app-metric-card label="Valor inventario"
+      [value]="(inventoryValue() | currency: 'COP' : 'symbol-narrow' : '1.0-0') ?? ''" hint="Valor estimado en stock"
+      icon="paid" tone="success" />
+  </section>
+
+  <section class="data-panel">
+    <div class="data-panel__header">
+      <div class="data-panel__title-group">
+        <span class="data-panel__icon">
+          <mat-icon>inventory</mat-icon>
+        </span>
+
+        <div>
+          <h2>Catálogo de productos</h2>
+          <p>Listado actual de productos disponibles para inventario y ventas.</p>
+        </div>
+      </div>
+    </div>
+
+    @if (products().length === 0) {
+    <div class="empty-state">
+      <span class="empty-state__icon">
+        <mat-icon>wine_bar</mat-icon>
+      </span>
+      <h3>No hay productos registrados</h3>
+      <p>Cuando agregues productos aparecerán aquí.</p>
+    </div>
+    } @else {
+    <div class="data-table data-table--md data-table--actions-end">
+      <table mat-table matSort [dataSource]="sortedProducts()" [matSortActive]="sort().active"
+        [matSortDirection]="sort().direction" (matSortChange)="sortProducts($event)">
+        <ng-container matColumnDef="product">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="name">Producto</th>
+          <td mat-cell *matCellDef="let product">
+            <div class="data-cell">
+              <span class="data-cell__icon">
+                <mat-icon>wine_bar</mat-icon>
+              </span>
+
+              <div>
+                <strong>{{ product.name }}</strong>
+                <small>ID {{ product.id.slice(0, 8) }}</small>
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="winery">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="winery">Bodega</th>
+          <td mat-cell *matCellDef="let product">{{ product.winery || 'Sin bodega' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="grapeVariety">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="grapeVariety">Cepa</th>
+          <td mat-cell *matCellDef="let product">{{ product.grapeVariety || 'Sin cepa' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="vintage">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="vintage">Año</th>
+          <td mat-cell *matCellDef="let product">{{ product.vintage || 'N/A' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="price">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="price">Precio</th>
+          <td mat-cell *matCellDef="let product">
+            <strong>{{ product.price | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="stock">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="stock">Stock</th>
+          <td mat-cell *matCellDef="let product">
+            <strong>{{ product.stock }}</strong>
+            <small>Mín. {{ product.minimumStock }}</small>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Estado</th>
+          <td mat-cell *matCellDef="let product">
+            <span class="status-badge" [class.status-badge--warning]="isLowStock(product)">
+              {{ isLowStock(product) ? 'Stock bajo' : 'Disponible' }}
+            </span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let product">
+            <button mat-icon-button type="button" [matMenuTriggerFor]="productMenu">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+
+            <mat-menu #productMenu="matMenu">
+              @if (canUpdateProduct()) {
+              <button mat-menu-item type="button" (click)="openEditProductDialog(product)">
+                <mat-icon>edit</mat-icon>
+                <span>Editar</span>
+              </button>
+              }
+
+              @if (canDeleteProduct()) {
+              <button class="menu-item-danger" mat-menu-item type="button" (click)="confirmDeleteProduct(product)">
+                <mat-icon>delete</mat-icon>
+                <span>Eliminar</span>
+              </button>
+              }
+            </mat-menu>
+          </td>
+
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns()"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns()"></tr>
+      </table>
+      <mat-paginator
+        [length]="totalElements()"
+        [pageIndex]="pageIndex()"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="[10, 20, 50]"
+        showFirstLastButtons
+        (page)="pageChanged($event)"
+      />
+    </div>
+
+    <div class="data-mobile-list">
+      @for (product of sortedProducts(); track product.id) {
+      <article class="data-card">
+        <div class="data-card__header">
+          <div class="data-cell">
+            <span class="data-cell__icon">
+              <mat-icon>wine_bar</mat-icon>
+            </span>
+
+            <div>
+              <strong>{{ product.name }}</strong>
+              <small>{{ product.winery || 'Sin bodega' }}</small>
+            </div>
+          </div>
+
+          <div class="product-card__actions">
+            <span class="status-badge" [class.status-badge--warning]="isLowStock(product)">
+              {{ isLowStock(product) ? 'Stock bajo' : 'Disponible' }}
+            </span>
+
+            <button mat-icon-button type="button" [matMenuTriggerFor]="mobileProductMenu">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+
+            <mat-menu #mobileProductMenu="matMenu">
+              @if (canUpdateProduct()) {
+              <button mat-menu-item type="button" (click)="openEditProductDialog(product)">
+                <mat-icon>edit</mat-icon>
+                <span>Editar</span>
+              </button>
+              }
+
+              @if (canDeleteProduct()) {
+              <button class="menu-item-danger" mat-menu-item type="button" (click)="confirmDeleteProduct(product)">
+                <mat-icon>delete</mat-icon>
+                <span>Eliminar</span>
+              </button>
+              }
+            </mat-menu>
+          </div>
+        </div>
+
+        <div class="data-card__grid">
+          <div>
+            <span>Cepa</span>
+            <strong>{{ product.grapeVariety || 'Sin cepa' }}</strong>
+          </div>
+
+          <div>
+            <span>Año</span>
+            <strong>{{ product.vintage || 'N/A' }}</strong>
+          </div>
+
+          <div>
+            <span>Precio</span>
+            <strong>{{ product.price | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+          </div>
+
+          <div>
+            <span>Stock</span>
+            <strong>{{ product.stock }} / mín. {{ product.minimumStock }}</strong>
+          </div>
+        </div>
+      </article>
+      }
+      <mat-paginator
+        [length]="totalElements()"
+        [pageIndex]="pageIndex()"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="[10, 20, 50]"
+        showFirstLastButtons
+        (page)="pageChanged($event)"
+      />
+    </div>
+    }
+  </section>
+  }
+</section>

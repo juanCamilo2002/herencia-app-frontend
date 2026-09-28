@@ -1,0 +1,136 @@
+<section class="app-form-dialog">
+  <header class="app-form-dialog__header">
+    <div>
+      <span>Inventario insumos</span>
+      <h2>Nuevo movimiento</h2>
+      <p>Registra entradas, salidas o ajustes manuales de insumos.</p>
+    </div>
+
+    <button mat-icon-button type="button" aria-label="Cerrar" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </header>
+
+  <form class="app-form-dialog__form" [formGroup]="form" (ngSubmit)="submit()">
+    @if (error()) {
+    <p class="app-form-dialog__error">{{ error() }}</p>
+    }
+
+    @if (selectedSupply(); as supply) {
+    <aside class="app-form-dialog__summary movement-dialog__stock-summary">
+      <div>
+        <span>Insumo seleccionado</span>
+        <strong>{{ supply.name }}</strong>
+      </div>
+
+      <div>
+        <span>Unidad</span>
+        <strong>{{ unitLabel(supply.unit) }}</strong>
+      </div>
+
+      <div>
+        <span>Stock actual</span>
+        <strong>{{ supply.stock | number: '1.0-3' }}</strong>
+      </div>
+
+      @if (projectedStock() !== null) {
+      <div>
+        <span>Stock resultante</span>
+        <strong>{{ projectedStock() | number: '1.0-3' }}</strong>
+      </div>
+      }
+    </aside>
+    }
+
+    <mat-form-field appearance="outline" class="app-form-dialog__field--full">
+      <mat-label>Insumo</mat-label>
+      <mat-select formControlName="supplyId" [disabled]="loadingSupplies()">
+        @for (supply of supplies(); track supply.id) {
+        <mat-option [value]="supply.id">
+          {{ supply.name }} - Stock actual: {{ supply.stock | number: '1.0-3' }} {{ unitLabel(supply.unit) }}
+        </mat-option>
+        }
+      </mat-select>
+
+      @if (hasError('supplyId', 'required')) {
+      <mat-error>Selecciona un insumo.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Tipo</mat-label>
+      <mat-select formControlName="type">
+        <mat-option value="INBOUND">Entrada</mat-option>
+        <mat-option value="OUTBOUND">Salida</mat-option>
+        <mat-option value="ADJUSTMENT">Ajuste</mat-option>
+        <mat-option value="LOSS">Merma / pérdida</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ quantityLabel() }}</mat-label>
+      <input matInput type="number" step="0.001" formControlName="quantity" />
+      <mat-hint>{{ quantityHint() }}</mat-hint>
+
+      @if (hasError('quantity', 'required')) {
+      <mat-error>La cantidad es obligatoria.</mat-error>
+      }
+
+      @if (hasError('quantity', 'min')) {
+      <mat-error>No puede ser negativa.</mat-error>
+      }
+    </mat-form-field>
+
+    @if (movementValidationError(); as validationError) {
+    <p class="app-form-dialog__inline-error movement-dialog__inline-error">{{ validationError }}</p>
+    }
+
+    <mat-form-field appearance="outline">
+      <mat-label>Fecha del movimiento</mat-label>
+      <input matInput [matDatepicker]="movementDatePicker" formControlName="movementDate" />
+      <mat-datepicker-toggle matIconSuffix [for]="movementDatePicker" />
+      <mat-datepicker #movementDatePicker />
+
+      @if (hasError('movementDate', 'required')) {
+      <mat-error>La fecha del movimiento es obligatoria.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Hora del movimiento</mat-label>
+      <mat-select formControlName="movementTime">
+        @for (time of timeOptions; track time) {
+        <mat-option [value]="time">{{ time }}</mat-option>
+        }
+      </mat-select>
+
+      @if (hasError('movementTime', 'required')) {
+      <mat-error>La hora del movimiento es obligatoria.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="app-form-dialog__field--full">
+      <mat-label>Motivo</mat-label>
+      <textarea matInput formControlName="reason" rows="3"></textarea>
+
+      @if (hasError('reason', 'maxlength')) {
+      <mat-error>Máximo 255 caracteres.</mat-error>
+      }
+    </mat-form-field>
+
+    <footer class="app-form-dialog__actions">
+      <button mat-button type="button" [disabled]="saving()" (click)="close()">
+        Cancelar
+      </button>
+
+      <button mat-flat-button type="submit"
+        [disabled]="saving() || loadingSupplies() || form.invalid || movementValidationError() != null">
+        @if (saving()) {
+        Guardando...
+        } @else {
+        Registrar movimiento
+        }
+      </button>
+    </footer>
+  </form>
+</section>

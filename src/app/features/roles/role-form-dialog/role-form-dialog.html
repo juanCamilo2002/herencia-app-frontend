@@ -1,0 +1,96 @@
+<section class="app-form-dialog">
+  <header class="app-form-dialog__header">
+    <div>
+      <span>Roles</span>
+      <h2>{{ isEdit ? 'Editar rol' : 'Nuevo rol' }}</h2>
+      <p>
+        {{
+        isEdit
+        ? 'Actualiza el nombre, descripción y estado del rol.'
+        : 'Crea un rol personalizado para asignarlo a usuarios.'
+        }}
+      </p>
+    </div>
+
+    <button mat-icon-button type="button" aria-label="Cerrar" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </header>
+
+  <form class="app-form-dialog__form" [formGroup]="form" (ngSubmit)="submit()">
+    <mat-form-field appearance="outline">
+      <mat-label>Código</mat-label>
+      <input matInput formControlName="code" autocomplete="off" (blur)="normalizeCode()" />
+      <mat-hint>Ejemplo: VENDEDOR_TIENDA. Se normaliza automáticamente.</mat-hint>
+
+      @if (hasError('code', 'required')) {
+      <mat-error>El código es obligatorio.</mat-error>
+      }
+
+      @if (hasError('code', 'minlength')) {
+      <mat-error>Mínimo 2 caracteres.</mat-error>
+      }
+
+      @if (hasError('code', 'maxlength')) {
+      <mat-error>Máximo 80 caracteres.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="name" autocomplete="off" />
+
+      @if (hasError('name', 'required')) {
+      <mat-error>El nombre es obligatorio.</mat-error>
+      }
+
+      @if (hasError('name', 'maxlength')) {
+      <mat-error>Máximo 120 caracteres.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="app-form-dialog__field--full role-description-field">
+      <mat-label>Descripción</mat-label>
+      <textarea matInput formControlName="description" rows="3"></textarea>
+
+      @if (hasError('description', 'maxlength')) {
+      <mat-error>Máximo 255 caracteres.</mat-error>
+      }
+    </mat-form-field>
+
+    @if (isEdit && role && !role.systemRole) {
+    <div class="app-form-dialog__status">
+      <mat-slide-toggle [checked]="form.controls.active.value" [disabled]="activeToggleDisabled"
+        (change)="setActive($event.checked)">
+        Rol activo
+      </mat-slide-toggle>
+
+      <p>
+        @if (activeToggleDisabled) {
+        Este rol tiene usuarios activos asignados y no puede desactivarse.
+        } @else {
+        Si desactivas el rol, no estará disponible para nuevas asignaciones.
+        }
+      </p>
+    </div>
+    }
+
+    @if (error()) {
+    <p class="app-form-dialog__error">{{ error() }}</p>
+    }
+
+    <footer class="app-form-dialog__actions">
+      <button mat-button type="button" [disabled]="saving()" (click)="close()">
+        Cancelar
+      </button>
+
+      <button mat-flat-button type="submit" [disabled]="saving()">
+        @if (saving()) {
+        Guardando...
+        } @else {
+        {{ isEdit ? 'Guardar cambios' : 'Crear rol' }}
+        }
+      </button>
+    </footer>
+  </form>
+</section>

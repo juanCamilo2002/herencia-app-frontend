@@ -1,0 +1,228 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <span class="page__eyebrow">Comercial</span>
+      <h1 class="page__title">Ventas</h1>
+      <p class="page__subtitle">
+        Consulta el historial de ventas, clientes asociados y productos vendidos.
+      </p>
+    </div>
+
+    <div class="page__actions">
+      @if (canCreateSale()) {
+      <button mat-flat-button type="button" (click)="openCreateSaleDialog()">
+        <mat-icon>add</mat-icon>
+        Nueva venta
+      </button>
+      }
+    </div>
+  </header>
+
+  @if (loading()) {
+  <section class="data-panel">
+    <p class="data-panel__muted">Cargando ventas...</p>
+  </section>
+  } @else if (error()) {
+  <section class="data-panel data-panel--error">
+    <h2>No fue posible cargar ventas</h2>
+    <p>{{ error() }}</p>
+  </section>
+  } @else {
+  <section class="data-stats">
+    <app-metric-card label="Total ventas" [value]="totalSales()" hint="Ventas registradas" icon="receipt_long"
+      tone="primary" />
+
+    <app-metric-card label="Ingresos" [value]="(totalRevenue() | currency: 'COP' : 'symbol-narrow' : '1.0-0') ?? ''"
+      hint="Ingresos acumulados" icon="paid" tone="success" />
+
+    <app-metric-card label="Ventas hoy" [value]="todaySales()" hint="Operaciones del día" icon="today" />
+
+    <app-metric-card label="Ticket promedio"
+      [value]="(averageTicket() | currency: 'COP' : 'symbol-narrow' : '1.0-0') ?? ''" hint="Promedio por venta"
+      icon="analytics" tone="warning" />
+  </section>
+
+  <section class="data-panel">
+    <div class="data-panel__header">
+      <div class="data-panel__title-group">
+        <span class="data-panel__icon">
+          <mat-icon>point_of_sale</mat-icon>
+        </span>
+
+        <div>
+          <h2>Historial de ventas</h2>
+          <p>Listado ordenado desde la venta más reciente.</p>
+        </div>
+      </div>
+    </div>
+
+    @if (sales().length === 0) {
+    <div class="empty-state">
+      <span class="empty-state__icon">
+        <mat-icon>receipt_long</mat-icon>
+      </span>
+      <h3>No hay ventas registradas</h3>
+      <p>Cuando registres ventas aparecerán aquí.</p>
+    </div>
+    } @else {
+    <div class="data-table data-table--lg data-table--actions-end sales-table">
+      <table mat-table [dataSource]="sales()">
+        <ng-container matColumnDef="sale">
+          <th mat-header-cell *matHeaderCellDef>Venta</th>
+          <td mat-cell *matCellDef="let sale">
+            <div class="data-cell">
+              <span class="data-cell__icon">
+                <mat-icon>receipt_long</mat-icon>
+              </span>
+
+              <div>
+                <strong>#{{ saleCode(sale) }}</strong>
+                <small>{{ sale.items.length }} producto(s)</small>
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="customer">
+          <th mat-header-cell *matHeaderCellDef>Cliente</th>
+          <td mat-cell *matCellDef="let sale">
+            {{ customerLabel(sale) }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="employee">
+          <th mat-header-cell *matHeaderCellDef>Vendedor</th>
+          <td mat-cell *matCellDef="let sale">
+            {{ sale.employeeName || 'Sin empleado' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="items">
+          <th mat-header-cell *matHeaderCellDef>Productos</th>
+          <td mat-cell *matCellDef="let sale">
+            <strong>{{ totalItems(sale) }} unidad(es)</strong>
+            <small>{{ itemsSummary(sale) }}</small>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="total">
+          <th mat-header-cell *matHeaderCellDef>Total</th>
+          <td mat-cell *matCellDef="let sale">
+            <strong>{{ sale.total | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Estado</th>
+          <td mat-cell *matCellDef="let sale">
+            <span class="status-badge">
+              {{ statusLabel(sale.status) }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let sale">
+            <button mat-icon-button type="button" aria-label="Ver detalle" (click)="openSaleDetailDialog(sale)">
+              <mat-icon>visibility</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="saleDateTime">
+          <th mat-header-cell *matHeaderCellDef>Fecha venta</th>
+          <td mat-cell *matCellDef="let sale">
+            {{ sale.saleDateTime | date: 'dd/MM/yyyy HH:mm' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="registeredBy">
+          <th mat-header-cell *matHeaderCellDef>Registrado por</th>
+          <td mat-cell *matCellDef="let sale">
+            {{ sale.registeredByName }}
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+      <mat-paginator [length]="totalElements()" [pageIndex]="pageIndex()" [pageSize]="pageSize()"
+        [pageSizeOptions]="[10, 20, 50]" showFirstLastButtons (page)="pageChanged($event)" />
+    </div>
+
+    <div class="data-mobile-list">
+      @for (sale of sales(); track sale.id) {
+      <article class="data-card">
+        <div class="data-card__header">
+          <div class="data-cell">
+            <span class="data-cell__icon">
+              <mat-icon>receipt_long</mat-icon>
+            </span>
+
+            <div>
+              <strong>#{{ saleCode(sale) }}</strong>
+              <small>{{ sale.saleDateTime | date: 'dd/MM/yyyy HH:mm' }}</small>
+            </div>
+          </div>
+
+          <div class="sale-card__actions">
+            <span class="status-badge">
+              {{ statusLabel(sale.status) }}
+            </span>
+
+            <button mat-icon-button type="button" aria-label="Ver detalle" (click)="openSaleDetailDialog(sale)">
+              <mat-icon>visibility</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="sale-card__total">
+          {{ sale.total | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+        </div>
+
+        <div class="data-card__grid">
+          <div>
+            <span>Cliente</span>
+            <strong>{{ customerLabel(sale) }}</strong>
+          </div>
+
+          <div>
+            <span>Productos</span>
+            <strong>{{ sale.items.length }}</strong>
+          </div>
+
+          <div>
+            <span>Unidades</span>
+            <strong>{{ totalItems(sale) }}</strong>
+          </div>
+
+          <div>
+            <span>Detalle</span>
+            <strong>{{ itemsSummary(sale) }}</strong>
+          </div>
+
+          <div>
+            <span>Vendedor</span>
+            <strong>{{ sale.employeeName || 'Sin empleado' }}</strong>
+          </div>
+
+          <div>
+            <span>Fecha venta</span>
+            <strong>{{ sale.saleDateTime | date: 'dd/MM/yyyy HH:mm' }}</strong>
+          </div>
+
+          <div>
+            <span>Registrado por</span>
+            <strong>{{ sale.registeredByName }}</strong>
+          </div>
+        </div>
+      </article>
+      }
+      <mat-paginator [length]="totalElements()" [pageIndex]="pageIndex()" [pageSize]="pageSize()"
+        [pageSizeOptions]="[10, 20, 50]" showFirstLastButtons (page)="pageChanged($event)" />
+    </div>
+    }
+
+  </section>
+  }
+</section>

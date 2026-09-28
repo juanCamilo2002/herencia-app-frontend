@@ -1,0 +1,225 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <span class="page__eyebrow">Operación</span>
+      <h1 class="page__title">Insumos</h1>
+      <p class="page__subtitle">
+        Administra materia prima, insumos, costos y disponibilidad actual.
+      </p>
+    </div>
+
+    <div class="page__actions">
+      @if (canCreateSupply()) {
+      <button mat-flat-button type="button" (click)="openCreateSupplyDialog()">
+        <mat-icon>add</mat-icon>
+        Nuevo insumo
+      </button>
+      }
+    </div>
+  </header>
+
+  @if (loading()) {
+  <section class="data-panel">
+    <p class="data-panel__muted">Cargando insumos...</p>
+  </section>
+  } @else if (error()) {
+  <section class="data-panel data-panel--error">
+    <h2>No fue posible cargar insumos</h2>
+    <p>{{ error() }}</p>
+  </section>
+  } @else {
+  <section class="data-stats">
+    <app-metric-card label="Total insumos" [value]="totalSupplies()" hint="Insumos activos registrados"
+      icon="science" tone="primary" />
+
+    <app-metric-card label="Stock bajo" [value]="lowStockSupplies()" hint="Insumos por reabastecer"
+      icon="inventory_2" tone="warning" />
+
+    <app-metric-card label="Valor inventario"
+      [value]="(inventoryValue() | currency: 'COP' : 'symbol-narrow' : '1.0-0') ?? ''"
+      hint="Valor estimado de insumos en stock" icon="paid" tone="success" />
+  </section>
+
+  <section class="data-panel">
+    <div class="data-panel__header">
+      <div class="data-panel__title-group">
+        <span class="data-panel__icon">
+          <mat-icon>science</mat-icon>
+        </span>
+
+        <div>
+          <h2>Catálogo de insumos</h2>
+          <p>Listado actual de insumos disponibles para operación y producción.</p>
+        </div>
+      </div>
+    </div>
+
+    @if (supplies().length === 0) {
+    <div class="empty-state">
+      <span class="empty-state__icon">
+        <mat-icon>science</mat-icon>
+      </span>
+      <h3>No hay insumos registrados</h3>
+      <p>Cuando agregues insumos aparecerán aquí.</p>
+    </div>
+    } @else {
+    <div class="data-table data-table--md data-table--actions-end">
+      <table mat-table matSort [dataSource]="supplies()" [matSortActive]="sort().active"
+        [matSortDirection]="sort().direction" (matSortChange)="sortSupplies($event)">
+
+        <ng-container matColumnDef="supply">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="name">Insumo</th>
+          <td mat-cell *matCellDef="let supply">
+            <div class="data-cell">
+              <span class="data-cell__icon">
+                <mat-icon>science</mat-icon>
+              </span>
+
+              <div>
+                <strong>{{ supply.name }}</strong>
+                <small>ID {{ supply.id.slice(0, 8) }}</small>
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="category">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="category">Categoría</th>
+          <td mat-cell *matCellDef="let supply">{{ supply.category || 'Sin categoría' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="unit">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="unit">Unidad</th>
+          <td mat-cell *matCellDef="let supply">{{ unitLabel(supply.unit) }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="unitCost">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="unitCost">Costo unitario</th>
+          <td mat-cell *matCellDef="let supply">
+            <strong>{{ supply.unitCost | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="stock">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="stock">Stock</th>
+          <td mat-cell *matCellDef="let supply">
+            <strong>{{ supply.stock | number: '1.0-3' }}</strong>
+            <small>Mín. {{ supply.minimumStock | number: '1.0-3' }}</small>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Estado</th>
+          <td mat-cell *matCellDef="let supply">
+            <span class="status-badge" [class.status-badge--warning]="isLowStock(supply)">
+              {{ isLowStock(supply) ? 'Stock bajo' : 'Disponible' }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let supply">
+            <button mat-icon-button type="button" [matMenuTriggerFor]="supplyMenu">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+
+            <mat-menu #supplyMenu="matMenu">
+              @if (canUpdateSupply()) {
+              <button mat-menu-item type="button" (click)="openEditSupplyDialog(supply)">
+                <mat-icon>edit</mat-icon>
+                <span>Editar</span>
+              </button>
+              }
+
+              @if (canDeleteSupply()) {
+              <button class="menu-item-danger" mat-menu-item type="button" (click)="confirmDeleteSupply(supply)">
+                <mat-icon>block</mat-icon>
+                <span>Desactivar</span>
+              </button>
+              }
+            </mat-menu>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns()"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns()"></tr>
+      </table>
+
+      <mat-paginator [length]="totalElements()" [pageIndex]="pageIndex()" [pageSize]="pageSize()"
+        [pageSizeOptions]="[10, 20, 50]" showFirstLastButtons (page)="pageChanged($event)" />
+    </div>
+
+    <div class="data-mobile-list">
+      @for (supply of supplies(); track supply.id) {
+      <article class="data-card">
+        <div class="data-card__header">
+          <div class="data-cell">
+            <span class="data-cell__icon">
+              <mat-icon>science</mat-icon>
+            </span>
+
+            <div>
+              <strong>{{ supply.name }}</strong>
+              <small>{{ supply.category || 'Sin categoría' }}</small>
+            </div>
+          </div>
+
+          <div class="supply-card__actions">
+            <span class="status-badge" [class.status-badge--warning]="isLowStock(supply)">
+              {{ isLowStock(supply) ? 'Stock bajo' : 'Disponible' }}
+            </span>
+
+            <button mat-icon-button type="button" [matMenuTriggerFor]="mobileSupplyMenu">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+
+            <mat-menu #mobileSupplyMenu="matMenu">
+              @if (canUpdateSupply()) {
+              <button mat-menu-item type="button" (click)="openEditSupplyDialog(supply)">
+                <mat-icon>edit</mat-icon>
+                <span>Editar</span>
+              </button>
+              }
+
+              @if (canDeleteSupply()) {
+              <button class="menu-item-danger" mat-menu-item type="button" (click)="confirmDeleteSupply(supply)">
+                <mat-icon>block</mat-icon>
+                <span>Desactivar</span>
+              </button>
+              }
+            </mat-menu>
+          </div>
+        </div>
+
+        <div class="data-card__grid">
+          <div>
+            <span>Unidad</span>
+            <strong>{{ unitLabel(supply.unit) }}</strong>
+          </div>
+
+          <div>
+            <span>Costo</span>
+            <strong>{{ supply.unitCost | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+          </div>
+
+          <div>
+            <span>Stock</span>
+            <strong>{{ supply.stock | number: '1.0-3' }}</strong>
+          </div>
+
+          <div>
+            <span>Mínimo</span>
+            <strong>{{ supply.minimumStock | number: '1.0-3' }}</strong>
+          </div>
+        </div>
+      </article>
+      }
+
+      <mat-paginator [length]="totalElements()" [pageIndex]="pageIndex()" [pageSize]="pageSize()"
+        [pageSizeOptions]="[10, 20, 50]" showFirstLastButtons (page)="pageChanged($event)" />
+    </div>
+    }
+  </section>
+  }
+</section>

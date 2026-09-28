@@ -1,0 +1,17 @@
+:host {
+  display: block;
+}
+
+.product-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 720px) {
+  .product-card__actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

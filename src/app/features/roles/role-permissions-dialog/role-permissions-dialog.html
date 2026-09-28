@@ -1,0 +1,72 @@
+<section class="app-form-dialog">
+  <header class="app-form-dialog__header">
+    <div>
+      <span>Permisos</span>
+      <h2>{{ role.name }}</h2>
+      <p>Selecciona las acciones permitidas para este rol.</p>
+    </div>
+
+    <button mat-icon-button type="button" aria-label="Cerrar" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </header>
+
+  <section class="role-permissions">
+    @if (loading()) {
+      <p class="role-permissions__muted">Cargando permisos...</p>
+    } @else {
+      @if (error()) {
+        <p class="app-form-dialog__error">{{ error() }}</p>
+      }
+
+      <div class="role-permissions__summary">
+        <span>Permisos seleccionados</span>
+        <strong>{{ selectedCount() }}</strong>
+      </div>
+
+      <div class="role-permissions__sections">
+        @for (section of catalog(); track section.sectionCode) {
+          <article class="role-permissions__section">
+            <header>
+              <mat-checkbox
+                [checked]="isSectionChecked(section)"
+                [indeterminate]="isSectionIndeterminate(section)"
+                (change)="toggleSection(section, $event)"
+              >
+                {{ section.sectionName }}
+              </mat-checkbox>
+
+              <span>{{ sectionSelectedCount(section) }} / {{ section.permissions.length }}</span>
+            </header>
+
+            <div class="role-permissions__grid">
+              @for (permission of section.permissions; track permission.id) {
+                <mat-checkbox
+                  [checked]="isSelected(permission.id)"
+                  (change)="togglePermission(permission.id, $event)"
+                >
+                  <strong>{{ permission.actionName }}</strong>
+                  <small>{{ permission.key }}</small>
+                </mat-checkbox>
+              }
+            </div>
+          </article>
+        }
+      </div>
+    }
+
+    <footer class="app-form-dialog__actions">
+      <button mat-button type="button" [disabled]="saving()" (click)="close()">
+        Cancelar
+      </button>
+
+      <button mat-flat-button type="button" [disabled]="saving() || loading()" (click)="submit()">
+        @if (saving()) {
+          Guardando...
+        } @else {
+          Guardar permisos
+        }
+      </button>
+    </footer>
+  </section>
+</section>

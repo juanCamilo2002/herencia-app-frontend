@@ -1,0 +1,30 @@
+@use '@angular/material' as mat;
+
+html {
+  @include mat.theme((
+    color: (
+      primary: mat.$azure-palette,
+      tertiary: mat.$blue-palette,
+    ),
+    typography: Inter,
+    density: 0,
+  ));
+
+  --mat-sys-primary: var(--color-primary);
+  --mat-sys-on-primary: #ffffff;
+  --mat-sys-primary-container: #dbeafe;
+  --mat-sys-on-primary-container: var(--color-primary-dark);
+
+  --mat-sys-tertiary: var(--color-primary-dark);
+  --mat-sys-on-tertiary: #ffffff;
+  --mat-sys-tertiary-container: #e0e7ff;
+
+  --mat-sys-background: var(--color-background);
+  --mat-sys-surface: var(--color-surface);
+  --mat-sys-on-surface: var(--color-text);
+  --mat-sys-outline: var(--color-border);
+
+  --mat-sys-surface-container-low: var(--color-surface);
+  --mat-sys-surface-container: var(--color-surface);
+  --mat-sys-surface-container-high: var(--color-surface-muted);
+}

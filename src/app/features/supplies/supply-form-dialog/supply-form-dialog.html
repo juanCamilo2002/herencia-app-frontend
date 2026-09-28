@@ -1,0 +1,112 @@
+<section class="app-form-dialog">
+  <header class="app-form-dialog__header">
+    <div>
+      <span>Insumos</span>
+      <h2>{{ isEdit ? 'Editar insumo' : 'Nuevo insumo' }}</h2>
+      <p>
+        {{ isEdit
+          ? 'Actualiza los datos del insumo. El stock se gestiona desde inventario.'
+          : 'Registra un insumo con unidad, costo y stock inicial.'
+        }}
+      </p>
+    </div>
+
+    <button mat-icon-button type="button" aria-label="Cerrar" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </header>
+
+  <form class="app-form-dialog__form" [formGroup]="form" (ngSubmit)="submit()">
+    <mat-form-field appearance="outline" class="app-form-dialog__field--full">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="name" autocomplete="off" />
+
+      @if (hasError('name', 'required')) {
+      <mat-error>El nombre es obligatorio.</mat-error>
+      }
+
+      @if (hasError('name', 'maxlength')) {
+      <mat-error>Máximo 120 caracteres.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Categoría</mat-label>
+      <input matInput formControlName="category" autocomplete="off" />
+
+      @if (hasError('category', 'maxlength')) {
+      <mat-error>Máximo 120 caracteres.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Unidad</mat-label>
+      <mat-select formControlName="unit">
+        @for (unit of units; track unit.value) {
+        <mat-option [value]="unit.value">{{ unit.label }}</mat-option>
+        }
+      </mat-select>
+
+      @if (hasError('unit', 'required')) {
+      <mat-error>La unidad es obligatoria.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Costo unitario</mat-label>
+      <input matInput type="number" formControlName="unitCost" />
+
+      @if (hasError('unitCost', 'required')) {
+      <mat-error>El costo es obligatorio.</mat-error>
+      }
+
+      @if (hasError('unitCost', 'min')) {
+      <mat-error>El costo no puede ser negativo.</mat-error>
+      }
+    </mat-form-field>
+
+    @if (!isEdit) {
+    <mat-form-field appearance="outline">
+      <mat-label>Stock inicial</mat-label>
+      <input matInput type="number" step="0.001" formControlName="stock" />
+
+      @if (hasError('stock', 'required')) {
+      <mat-error>El stock inicial es obligatorio.</mat-error>
+      }
+
+      @if (hasError('stock', 'min')) {
+      <mat-error>El stock no puede ser negativo.</mat-error>
+      }
+    </mat-form-field>
+    }
+
+    <mat-form-field appearance="outline">
+      <mat-label>Stock mínimo</mat-label>
+      <input matInput type="number" step="0.001" formControlName="minimumStock" />
+
+      @if (hasError('minimumStock', 'required')) {
+      <mat-error>El stock mínimo es obligatorio.</mat-error>
+      }
+
+      @if (hasError('minimumStock', 'min')) {
+      <mat-error>El stock mínimo no puede ser negativo.</mat-error>
+      }
+    </mat-form-field>
+
+    @if (error()) {
+    <p class="app-form-dialog__error">{{ error() }}</p>
+    }
+
+    <footer class="app-form-dialog__actions">
+      <button mat-button type="button" [disabled]="saving()" (click)="close()">Cancelar</button>
+
+      <button mat-flat-button type="submit" [disabled]="saving()">
+        @if (saving()) {
+        Guardando...
+        } @else {
+        {{ isEdit ? 'Guardar cambios' : 'Crear insumo' }}
+        }
+      </button>
+    </footer>
+  </form>
+</section>

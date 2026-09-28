@@ -1,0 +1,209 @@
+<section class="app-form-dialog">
+  <header class="app-form-dialog__header">
+    <div>
+      <span>Ventas</span>
+      <h2>Nueva venta</h2>
+      <p>Selecciona cliente, productos y cantidades para registrar una venta.</p>
+    </div>
+
+    <button mat-icon-button type="button" aria-label="Cerrar" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </header>
+
+  <form class="app-form-dialog__form" [formGroup]="form" (ngSubmit)="submit()">
+    @if (error()) {
+    <p class="app-form-dialog__error">{{ error() }}</p>
+    }
+
+    <mat-form-field appearance="outline">
+      <mat-label>Fecha de venta</mat-label>
+      <input matInput [matDatepicker]="saleDatePicker" formControlName="saleDate" />
+      <mat-datepicker-toggle matIconSuffix [for]="saleDatePicker" />
+      <mat-datepicker #saleDatePicker />
+
+      @if (hasError('saleDate', 'required')) {
+      <mat-error>La fecha de venta es obligatoria.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Hora de venta</mat-label>
+      <mat-select formControlName="saleTime">
+        @for (time of timeOptions; track time) {
+        <mat-option [value]="time">{{ time }}</mat-option>
+        }
+      </mat-select>
+
+      @if (hasError('saleTime', 'required')) {
+      <mat-error>La hora de venta es obligatoria.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Vendedor / empleado</mat-label>
+      <mat-select formControlName="employeeId" [disabled]="loadingData()">
+        @for (employee of employees(); track employee.id) {
+        <mat-option [value]="employee.id">
+          {{ employee.name }}
+        </mat-option>
+        }
+      </mat-select>
+
+      @if (hasError('employeeId', 'required')) {
+      <mat-error>Selecciona el empleado que realizó la venta.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Cliente registrado</mat-label>
+      <mat-select formControlName="customerId" [disabled]="loadingData()">
+        <mat-option [value]="null">Cliente general</mat-option>
+
+        @for (customer of customers(); track customer.id) {
+        <mat-option [value]="customer.id">
+          {{ customer.name }}
+        </mat-option>
+        }
+      </mat-select>
+      <mat-hint>Opcional. Si no eliges cliente, puedes escribir un nombre manual.</mat-hint>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Nombre cliente manual</mat-label>
+      <input matInput formControlName="customerName" autocomplete="off" />
+
+      @if (hasError('customerName', 'maxlength')) {
+      <mat-error>Máximo 160 caracteres.</mat-error>
+      }
+    </mat-form-field>
+
+    <section class="app-form-dialog__field--full sale-dialog__items" formArrayName="items">
+      <div class="sale-dialog__items-header">
+        <div>
+          <h3>Productos</h3>
+          <p>Agrega uno o varios productos a la venta.</p>
+        </div>
+
+        <button mat-button type="button" [disabled]="loadingData() || saving()" (click)="addItem()">
+          <mat-icon>add</mat-icon>
+          Agregar producto
+        </button>
+      </div>
+
+      @for (item of itemControls; track $index; let index = $index) {
+      <article class="sale-item" [formGroupName]="index">
+        <div class="sale-item__fields" [class.sale-item__fields--custom]="item.controls.useCustomPrice.value">
+          <mat-form-field appearance="outline">
+            <mat-label>Producto</mat-label>
+            <mat-select formControlName="productId" [disabled]="loadingData()">
+              @for (product of products(); track product.id) {
+              <mat-option [value]="product.id" [disabled]="product.stock <= 0">
+                {{ product.name }} - Stock: {{ product.stock }}
+              </mat-option>
+              }
+            </mat-select>
+
+            @if (hasItemError(index, 'productId', 'required')) {
+            <mat-error>Selecciona un producto.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Cantidad</mat-label>
+            <input matInput type="number" formControlName="quantity" />
+
+            @if (hasItemError(index, 'quantity', 'required')) {
+            <mat-error>La cantidad es obligatoria.</mat-error>
+            }
+
+            @if (hasItemError(index, 'quantity', 'min')) {
+            <mat-error>Mínimo 1 unidad.</mat-error>
+            }
+          </mat-form-field>
+
+          @if (canUseCustomPrice() && item.controls.useCustomPrice.value) {
+          <mat-form-field appearance="outline">
+            <mat-label>Precio personalizado</mat-label>
+            <input matInput type="number" formControlName="customUnitPrice" />
+
+            @if (hasItemError(index, 'customUnitPrice', 'min')) {
+            <mat-error>Debe ser mayor que 0.</mat-error>
+            }
+          </mat-form-field>
+          }
+
+          <button mat-icon-button type="button" aria-label="Eliminar producto"
+            [disabled]="saleItems.length === 1 || saving()" (click)="removeItem(index)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+
+        @if (canUseCustomPrice()) {
+        <div class="sale-item__custom-price-toggle">
+          <mat-slide-toggle formControlName="useCustomPrice">
+            Usar precio personalizado para este producto
+          </mat-slide-toggle>
+
+          @if (selectedProduct(index); as product) {
+          <small>
+            Precio de lista:
+            {{ product.price | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+          </small>
+          }
+        </div>
+        }
+
+        @if (selectedProduct(index); as product) {
+        <div class="sale-item__summary">
+          <div>
+            <span>Precio unitario</span>
+            <strong>{{ itemUnitPrice(index) | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+
+            @if (item.controls.useCustomPrice.value) {
+            <small>
+              Lista: {{ product.price | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+            </small>
+            }
+          </div>
+
+          <div>
+            <span>Stock disponible</span>
+            <strong>{{ product.stock }}</strong>
+          </div>
+
+          <div>
+            <span>Subtotal</span>
+            <strong>{{ itemSubtotal(index) | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+          </div>
+        </div>
+        }
+      </article>
+      }
+    </section>
+
+    @if (saleValidationError(); as validationError) {
+    <p class="app-form-dialog__error">{{ validationError }}</p>
+    }
+
+    <aside class="app-form-dialog__field--full sale-dialog__total">
+      <span>Total venta</span>
+      <strong>{{ saleTotal() | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+    </aside>
+
+    <footer class="app-form-dialog__actions">
+      <button mat-button type="button" [disabled]="saving()" (click)="close()">
+        Cancelar
+      </button>
+
+      <button mat-flat-button type="submit"
+        [disabled]="saving() || loadingData() || form.invalid || saleValidationError() != null">
+        @if (saving()) {
+        Guardando...
+        } @else {
+        Registrar venta
+        }
+      </button>
+    </footer>
+  </form>
+</section>
