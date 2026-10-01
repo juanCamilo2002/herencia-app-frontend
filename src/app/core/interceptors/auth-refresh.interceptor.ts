@@ -7,6 +7,10 @@ import { AuthSessionService } from '../auth/auth-session.service';
 export const authRefreshInterceptor: HttpInterceptorFn = (request, next) => {
   const session = inject(AuthSessionService);
 
+  if (!session.isBrowser()) {
+    return next(request);
+  }
+
   return next(request).pipe(
     catchError((error) => {
       if (
