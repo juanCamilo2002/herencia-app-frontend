@@ -9,8 +9,14 @@ import { ToastService } from '../../shared/services/toast.service';
 import { InventoryMovementDialog } from './inventory-movement-dialog/inventory-movement-dialog';
 import { MetricCard } from '../../shared/components/metric-card/metric-card';
 import { InventoryService } from './data-access/inventory.service';
-import { InventorySummary, StockMovement, StockMovementSourceType, StockMovementType } from './data-access/inventory.model';
+import { InventorySummary, StockMovement } from './data-access/inventory.model';
 import { AuthSessionService } from '../../core/auth/auth-session.service';
+import {
+  stockMovementIcon,
+  stockMovementLabel,
+  stockMovementSourceLabel,
+  stockMovementTone,
+} from './data-access/inventory-labels';
 
 @Component({
   imports: [
@@ -49,6 +55,11 @@ export class Inventory implements OnInit {
     'reason',
     'movementDateTime'
   ];
+
+  protected readonly movementLabel = stockMovementLabel;
+  protected readonly movementIcon = stockMovementIcon;
+  protected readonly movementTone = stockMovementTone;
+  protected readonly sourceLabel = stockMovementSourceLabel;
 
   protected readonly totalMovements = computed(() => this.summary()?.totalMovements ?? 0);
   protected readonly inboundMovements = computed(() => this.summary()?.inboundMovements ?? 0);
@@ -97,58 +108,6 @@ export class Inventory implements OnInit {
     this.pageIndex.set(event.pageIndex);
     this.pageSize.set(event.pageSize);
     this.loadMovements();
-  }
-
-  protected movementLabel(type: StockMovementType) {
-    switch (type) {
-      case 'INBOUND':
-        return 'Entrada';
-      case 'OUTBOUND':
-        return 'Salida';
-      case 'ADJUSTMENT':
-        return 'Ajuste';
-      case 'LOSS':
-        return 'Merma';
-    }
-  }
-
-  protected movementIcon(type: StockMovementType) {
-    switch (type) {
-      case 'INBOUND':
-        return 'add_box';
-      case 'OUTBOUND':
-        return 'indeterminate_check_box';
-      case 'ADJUSTMENT':
-        return 'tune';
-      case 'LOSS':
-        return 'report_problem'
-    }
-  }
-
-  protected movementTone(type: StockMovementType) {
-    switch (type) {
-      case 'INBOUND':
-        return 'movement-badge--success';
-      case 'OUTBOUND':
-        return 'movement-badge--warning';
-      case 'ADJUSTMENT':
-        return 'movement-badge--info';
-      case 'LOSS':
-        return 'movement-badge--loss';
-    }
-  }
-
-  protected sourceLabel(sourceType: StockMovementSourceType | null) {
-    switch (sourceType) {
-      case 'MANUAL':
-        return 'Manual';
-      case 'SALE':
-        return 'Venta';
-      case 'PRODUCTION':
-        return 'Producción';
-      default:
-        return 'Sin origen';
-    }
   }
 
   protected movementDelta(movement: StockMovement) {

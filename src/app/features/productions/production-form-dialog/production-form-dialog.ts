@@ -11,7 +11,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { Product } from '../../products/data-access/product.model';
 import { ProductService } from '../../products/data-access/product.service';
-import { Supply, SupplyUnit } from '../../supplies/data-access/supply.model';
+import { Supply } from '../../supplies/data-access/supply.model';
 import { SupplyService } from '../../supplies/data-access/supply.service';
 import { ToastService } from '../../../shared/services/toast.service';
 import {
@@ -20,6 +20,8 @@ import {
     ProductionSupplyItemType,
 } from '../data-access/production.model';
 import { ProductionService } from '../data-access/production.service';
+import { supplyUnitLabel } from '../../supplies/data-access/supply-labels';
+import { PRODUCTION_PROCESS_OPTIONS } from '../data-access/production-labels';
 
 type ProductionSupplyFormValue = {
     supplyId: string;
@@ -58,12 +60,8 @@ export class ProductionFormDialog implements OnInit {
     protected readonly saving = signal(false);
     protected readonly error = signal<string | null>(null);
 
-    protected readonly processOptions: { value: ProductionProcessType; label: string }[] = [
-        { value: 'BOTTLING', label: 'Embotellado' },
-        { value: 'LABELING', label: 'Etiquetado' },
-        { value: 'PACKAGING', label: 'Empaque' },
-        { value: 'OTHER', label: 'Otro' },
-    ];
+    protected readonly processOptions = PRODUCTION_PROCESS_OPTIONS;
+    protected readonly unitLabel = supplyUnitLabel;
 
     protected readonly form = this.formBuilder.nonNullable.group({
         productionDate: this.formBuilder.control<Date | null>(new Date(), [Validators.required]),
@@ -198,25 +196,6 @@ export class ProductionFormDialog implements OnInit {
         }
 
         return `${supply.name} (${this.unitLabel(supply.unit)})`;
-    }
-
-    protected unitLabel(unit: SupplyUnit) {
-        switch (unit) {
-            case 'UNIT':
-                return 'Unidad';
-            case 'GRAM':
-                return 'Gramo';
-            case 'KILOGRAM':
-                return 'Kilogramo';
-            case 'MILLILITER':
-                return 'Mililitro';
-            case 'LITER':
-                return 'Litro';
-            case 'METER':
-                return 'Metro';
-            case 'PACKAGE':
-                return 'Paquete';
-        }
     }
 
     private createOutputGroup() {

@@ -11,9 +11,10 @@ import { AuthSessionService } from '../../core/auth/auth-session.service';
 import { ConfirmDialog } from '../../shared/components/confirm-dialog/confirm-dialog';
 import { MetricCard } from '../../shared/components/metric-card/metric-card';
 import { ToastService } from '../../shared/services/toast.service';
-import { Supply, SupplySummary, SupplyUnit } from './data-access/supply.model';
+import { Supply, SupplySummary } from './data-access/supply.model';
 import { SupplyService } from './data-access/supply.service';
 import { SupplyFormDialog } from './supply-form-dialog/supply-form-dialog';
+import { supplyUnitLabel } from './data-access/supply-labels';
 
 @Component({
   imports: [
@@ -46,6 +47,8 @@ export class Supplies implements OnInit {
   protected readonly pageIndex = signal(0);
   protected readonly pageSize = signal(20);
   protected readonly totalElements = signal(0);
+  
+  protected readonly unitLabel = supplyUnitLabel;
 
   protected readonly displayedColumns = computed(() => [
     'supply',
@@ -109,25 +112,6 @@ export class Supplies implements OnInit {
 
   protected isLowStock(supply: Supply) {
     return supply.stock <= supply.minimumStock;
-  }
-
-  protected unitLabel(unit: SupplyUnit) {
-    switch (unit) {
-      case 'UNIT':
-        return 'Unidad';
-      case 'GRAM':
-        return 'Gramo';
-      case 'KILOGRAM':
-        return 'Kilogramo';
-      case 'MILLILITER':
-        return 'Mililitro';
-      case 'LITER':
-        return 'Litro';
-      case 'METER':
-        return 'Metro';
-      case 'PACKAGE':
-        return 'Paquete';
-    }
   }
 
   protected openCreateSupplyDialog() {

@@ -3,12 +3,9 @@ import { Component, inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import {
-  Production,
-  ProductionProcessType,
-  ProductionSupplyItem,
-} from '../data-access/production.model';
-import { SupplyUnit } from '../../supplies/data-access/supply.model';
+import { Production, ProductionSupplyItem } from '../data-access/production.model';
+import { supplyUnitLabel } from '../../supplies/data-access/supply-labels';
+import { productionProcessLabel } from '../data-access/production-labels';
 
 export type ProductionDetailDialogData = {
   production: Production;
@@ -36,37 +33,8 @@ export class ProductionDetailDialog {
     this.dialogRef.close();
   }
 
-  protected processLabel(type: ProductionProcessType) {
-    switch (type) {
-      case 'BOTTLING':
-        return 'Embotellado';
-      case 'LABELING':
-        return 'Etiquetado';
-      case 'PACKAGING':
-        return 'Empaque';
-      case 'OTHER':
-        return 'Otro';
-    }
-  }
-
-  protected unitLabel(unit: SupplyUnit) {
-    switch (unit) {
-      case 'UNIT':
-        return 'Unidad';
-      case 'GRAM':
-        return 'Gramo';
-      case 'KILOGRAM':
-        return 'Kilogramo';
-      case 'MILLILITER':
-        return 'Mililitro';
-      case 'LITER':
-        return 'Litro';
-      case 'METER':
-        return 'Metro';
-      case 'PACKAGE':
-        return 'Paquete';
-    }
-  }
+  protected readonly processLabel = productionProcessLabel;
+  protected readonly unitLabel = supplyUnitLabel;
 
   protected consumedItems() {
     return this.production.supplies.filter((item) => item.type === 'CONSUMED');

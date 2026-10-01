@@ -8,15 +8,19 @@ import { MatTableModule } from '@angular/material/table';
 import { AuthSessionService } from '../../core/auth/auth-session.service';
 import { MetricCard } from '../../shared/components/metric-card/metric-card';
 import { ToastService } from '../../shared/services/toast.service';
-import { SupplyUnit } from '../supplies/data-access/supply.model';
 import {
   SupplyInventorySummary,
   SupplyMovement,
-  SupplyMovementSourceType,
-  SupplyMovementType,
 } from './data-access/supply-inventory.model';
 import { SupplyInventoryService } from './data-access/supply-inventory.service';
 import { SupplyMovementDialog } from './supply-movement-dialog/supply-movement-dialog';
+import { supplyUnitLabel } from '../supplies/data-access/supply-labels';
+import {
+  supplyMovementIcon,
+  supplyMovementLabel,
+  supplyMovementSourceLabel,
+  supplyMovementTone,
+} from './data-access/supply-inventory-labels';
 
 @Component({
   imports: [
@@ -57,6 +61,12 @@ export class SupplyInventory implements OnInit {
     'movementDateTime',
   ];
 
+  protected readonly unitLabel = supplyUnitLabel;
+  protected readonly movementLabel = supplyMovementLabel;
+  protected readonly movementIcon = supplyMovementIcon;
+  protected readonly movementTone = supplyMovementTone;
+  protected readonly sourceLabel = supplyMovementSourceLabel;
+
   protected readonly totalMovements = computed(() => this.summary()?.totalMovements ?? 0);
   protected readonly inboundMovements = computed(() => this.summary()?.inboundMovements ?? 0);
   protected readonly outboundMovements = computed(() => this.summary()?.outboundMovements ?? 0);
@@ -77,76 +87,6 @@ export class SupplyInventory implements OnInit {
     this.pageIndex.set(event.pageIndex);
     this.pageSize.set(event.pageSize);
     this.loadMovements();
-  }
-
-  protected movementLabel(type: SupplyMovementType) {
-    switch (type) {
-      case 'INBOUND':
-        return 'Entrada';
-      case 'OUTBOUND':
-        return 'Salida';
-      case 'ADJUSTMENT':
-        return 'Ajuste';
-      case 'LOSS':
-        return 'Merma';
-
-    }
-  }
-
-  protected movementIcon(type: SupplyMovementType) {
-    switch (type) {
-      case 'INBOUND':
-        return 'add_box';
-      case 'OUTBOUND':
-        return 'indeterminate_check_box';
-      case 'ADJUSTMENT':
-        return 'tune';
-      case 'LOSS':
-        return 'report_problem';
-    }
-  }
-
-  protected movementTone(type: SupplyMovementType) {
-    switch (type) {
-      case 'INBOUND':
-        return 'movement-badge--success';
-      case 'OUTBOUND':
-        return 'movement-badge--warning';
-      case 'ADJUSTMENT':
-        return 'movement-badge--info';
-      case 'LOSS':
-        return 'movement-badge--loss';
-    }
-  }
-
-  protected sourceLabel(sourceType: SupplyMovementSourceType | null) {
-    switch (sourceType) {
-      case 'MANUAL':
-        return 'Manual';
-      case 'PRODUCTION':
-        return 'Producción';
-      default:
-        return 'Sin origen';
-    }
-  }
-
-  protected unitLabel(unit: SupplyUnit) {
-    switch (unit) {
-      case 'UNIT':
-        return 'Unidad';
-      case 'GRAM':
-        return 'Gramo';
-      case 'KILOGRAM':
-        return 'Kilogramo';
-      case 'MILLILITER':
-        return 'Mililitro';
-      case 'LITER':
-        return 'Litro';
-      case 'METER':
-        return 'Metro';
-      case 'PACKAGE':
-        return 'Paquete';
-    }
   }
 
   protected movementDelta(movement: SupplyMovement) {

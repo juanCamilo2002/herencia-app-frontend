@@ -10,13 +10,13 @@ import { MetricCard } from '../../shared/components/metric-card/metric-card';
 import { ToastService } from '../../shared/services/toast.service';
 import {
   Production,
-  ProductionProcessType,
   ProductionSummary,
   ProductionSupplyItem,
 } from './data-access/production.model';
 import { ProductionService } from './data-access/production.service';
 import { ProductionDetailDialog } from './production-detail-dialog/production-detail-dialog';
 import { ProductionFormDialog } from './production-form-dialog/production-form-dialog';
+import { productionProcessLabel, productionStatusLabel } from './data-access/production-labels';
 
 @Component({
   imports: [
@@ -46,6 +46,9 @@ export class Productions implements OnInit {
   protected readonly pageIndex = signal(0);
   protected readonly pageSize = signal(20);
   protected readonly totalElements = signal(0);
+
+  protected readonly processLabel = productionProcessLabel;
+  protected readonly statusLabel = productionStatusLabel;
 
   protected readonly displayedColumns = [
     'productionDateTime',
@@ -118,18 +121,6 @@ export class Productions implements OnInit {
     });
   }
 
-  protected processLabel(type: ProductionProcessType) {
-    switch (type) {
-      case 'BOTTLING':
-        return 'Embotellado';
-      case 'LABELING':
-        return 'Etiquetado';
-      case 'PACKAGING':
-        return 'Empaque';
-      case 'OTHER':
-        return 'Otro';
-    }
-  }
 
   protected outputsSummary(production: Production) {
     return production.outputs
@@ -155,9 +146,6 @@ export class Productions implements OnInit {
       .join(', ');
   }
 
-  protected statusLabel() {
-    return 'Completada';
-  }
 
   private loadProductions() {
     this.loading.set(true);

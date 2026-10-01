@@ -12,10 +12,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { ToastService } from '../../../shared/services/toast.service';
-import { Supply, SupplyUnit } from '../../supplies/data-access/supply.model';
+import { Supply } from '../../supplies/data-access/supply.model';
 import { SupplyService } from '../../supplies/data-access/supply.service';
 import { CreateSupplyMovementRequest, SupplyMovementType } from '../data-access/supply-inventory.model';
 import { SupplyInventoryService } from '../data-access/supply-inventory.service';
+import { supplyUnitLabel } from '../../supplies/data-access/supply-labels';
 
 @Component({
   imports: [
@@ -45,6 +46,8 @@ export class SupplyMovementDialog implements OnInit {
   protected readonly loadingSupplies = signal(true);
   protected readonly saving = signal(false);
   protected readonly error = signal<string | null>(null);
+
+  protected readonly unitLabel = supplyUnitLabel;
 
   protected readonly form = this.formBuilder.nonNullable.group({
     supplyId: ['', [Validators.required]],
@@ -196,24 +199,7 @@ export class SupplyMovementDialog implements OnInit {
     }
   }
 
-  protected unitLabel(unit: SupplyUnit) {
-    switch (unit) {
-      case 'UNIT':
-        return 'Unidad';
-      case 'GRAM':
-        return 'Gramo';
-      case 'KILOGRAM':
-        return 'Kilogramo';
-      case 'MILLILITER':
-        return 'Mililitro';
-      case 'LITER':
-        return 'Litro';
-      case 'METER':
-        return 'Metro';
-      case 'PACKAGE':
-        return 'Paquete';
-    }
-  }
+
 
   private loadSupplies() {
     this.loadingSupplies.set(true);
