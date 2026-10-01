@@ -1,0 +1,36 @@
+:host {
+  display: block;
+}
+
+.production-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.production-tags span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 9px;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.07);
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.production-card__title {
+  display: grid;
+  gap: 3px;
+}
+
+.production-card__title strong {
+  color: var(--color-text);
+}
+
+.production-card__title small {
+  color: var(--color-muted);
+  font-size: 12px;
+}

@@ -144,6 +144,8 @@ export class Inventory implements OnInit {
         return 'Manual';
       case 'SALE':
         return 'Venta';
+      case 'PRODUCTION':
+        return 'Producción';
       default:
         return 'Sin origen';
     }

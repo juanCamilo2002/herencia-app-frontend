@@ -1,0 +1,190 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <span class="page__eyebrow">Operación</span>
+      <h1 class="page__title">Producciones</h1>
+      <p class="page__subtitle">
+        Registra productos generados, insumos consumidos, mermas y procesos realizados.
+      </p>
+    </div>
+
+    <div class="page__actions">
+      @if (canCreateProduction()) {
+      <button mat-flat-button type="button" (click)="openCreateProductionDialog()">
+        <mat-icon>add</mat-icon>
+        Nueva producción
+      </button>
+      }
+    </div>
+  </header>
+
+  @if (loading()) {
+  <section class="data-panel">
+    <p class="data-panel__muted">Cargando producciones...</p>
+  </section>
+  } @else if (error()) {
+  <section class="data-panel data-panel--error">
+    <h2>No fue posible cargar producciones</h2>
+    <p>{{ error() }}</p>
+  </section>
+  } @else {
+  <section class="data-stats">
+    <app-metric-card label="Producciones" [value]="totalProductions()" hint="Registros completados"
+      icon="precision_manufacturing" tone="primary" />
+
+    <app-metric-card label="Productos generados" [value]="outputUnits()" hint="Unidades finales producidas"
+      icon="inventory_2" tone="success" />
+
+    <app-metric-card label="Insumos consumidos" [value]="(consumedSupplies() | number: '1.0-3') ?? '0'"
+      hint="Cantidad total consumida" icon="science" tone="warning" />
+
+    <app-metric-card label="Mermas" [value]="(lostSupplies() | number: '1.0-3') ?? '0'"
+      hint="Insumos perdidos o dañados" icon="report_problem" tone="danger" />
+  </section>
+
+  <section class="data-panel">
+    <div class="data-panel__header">
+      <div class="data-panel__title-group">
+        <span class="data-panel__icon">
+          <mat-icon>precision_manufacturing</mat-icon>
+        </span>
+
+        <div>
+          <h2>Historial de producciones</h2>
+          <p>Producciones ordenadas desde la más reciente.</p>
+        </div>
+      </div>
+    </div>
+
+    @if (productions().length === 0) {
+    <div class="empty-state">
+      <span class="empty-state__icon">
+        <mat-icon>precision_manufacturing</mat-icon>
+      </span>
+      <h3>No hay producciones registradas</h3>
+      <p>Cuando registres una producción aparecerá aquí.</p>
+    </div>
+    } @else {
+    <div class="data-table data-table--lg data-table--actions-end">
+      <table mat-table [dataSource]="productions()">
+        <ng-container matColumnDef="productionDateTime">
+          <th mat-header-cell *matHeaderCellDef>Fecha</th>
+          <td mat-cell *matCellDef="let production">
+            {{ production.productionDateTime | date: 'dd/MM/yyyy HH:mm' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="processes">
+          <th mat-header-cell *matHeaderCellDef>Procesos</th>
+          <td mat-cell *matCellDef="let production">
+            <div class="production-tags">
+              @for (process of production.processes; track process.id) {
+              <span>{{ processLabel(process.type) }}</span>
+              }
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="outputs">
+          <th mat-header-cell *matHeaderCellDef>Productos</th>
+          <td mat-cell *matCellDef="let production">
+            {{ outputsSummary(production) }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="supplies">
+          <th mat-header-cell *matHeaderCellDef>Insumos usados</th>
+          <td mat-cell *matCellDef="let production">
+            {{ suppliesSummary(consumedItems(production)) }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="losses">
+          <th mat-header-cell *matHeaderCellDef>Mermas</th>
+          <td mat-cell *matCellDef="let production">
+            {{ suppliesSummary(lossItems(production)) }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="registeredBy">
+          <th mat-header-cell *matHeaderCellDef>Registrado por</th>
+          <td mat-cell *matCellDef="let production">
+            {{ production.registeredByName }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Estado</th>
+          <td mat-cell *matCellDef="let production">
+            <span class="status-badge">{{ statusLabel() }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let production">
+            <button mat-icon-button type="button" aria-label="Ver detalle" (click)="openDetailDialog(production)">
+              <mat-icon>visibility</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+
+      <mat-paginator [length]="totalElements()" [pageIndex]="pageIndex()" [pageSize]="pageSize()"
+        [pageSizeOptions]="[10, 20, 50]" showFirstLastButtons (page)="pageChanged($event)" />
+    </div>
+
+    <div class="data-mobile-list">
+      @for (production of productions(); track production.id) {
+      <article class="data-card">
+        <div class="data-card__header">
+          <div class="production-card__title">
+            <strong>{{ production.productionDateTime | date: 'dd/MM/yyyy HH:mm' }}</strong>
+            <small>{{ production.registeredByName }}</small>
+          </div>
+
+          <button mat-icon-button type="button" aria-label="Ver detalle" (click)="openDetailDialog(production)">
+            <mat-icon>visibility</mat-icon>
+          </button>
+        </div>
+
+        <div class="production-tags">
+          @for (process of production.processes; track process.id) {
+          <span>{{ processLabel(process.type) }}</span>
+          }
+        </div>
+
+        <div class="data-card__grid">
+          <div>
+            <span>Productos</span>
+            <strong>{{ outputsSummary(production) }}</strong>
+          </div>
+
+          <div>
+            <span>Insumos usados</span>
+            <strong>{{ suppliesSummary(consumedItems(production)) }}</strong>
+          </div>
+
+          <div>
+            <span>Mermas</span>
+            <strong>{{ suppliesSummary(lossItems(production)) }}</strong>
+          </div>
+
+          <div>
+            <span>Estado</span>
+            <strong>{{ statusLabel() }}</strong>
+          </div>
+        </div>
+      </article>
+      }
+
+      <mat-paginator [length]="totalElements()" [pageIndex]="pageIndex()" [pageSize]="pageSize()"
+        [pageSizeOptions]="[10, 20, 50]" showFirstLastButtons (page)="pageChanged($event)" />
+    </div>
+    }
+  </section>
+  }
+</section>

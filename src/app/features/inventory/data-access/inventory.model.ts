@@ -8,7 +8,7 @@ export type InventorySummary = {
 
 export type StockMovementType = 'INBOUND'| 'OUTBOUND' | 'ADJUSTMENT' | 'LOSS';
 
-export type StockMovementSourceType = 'MANUAL'| 'SALE';
+export type StockMovementSourceType = 'MANUAL'| 'SALE' | 'PRODUCTION';
 
 export type StockMovement = {
     id: string;

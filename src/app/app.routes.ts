@@ -88,6 +88,12 @@ export const routes: Routes = [
         data: { permission: 'supply-inventory:read' },
         loadComponent: () => import('./features/supply-inventory/supply-inventory').then((m) => m.SupplyInventory),
       },
+      {
+        path: 'productions',
+        canActivate: [permissionGuard],
+        data: { permission: 'productions:read' },
+        loadComponent: () => import('./features/productions/productions').then((m) => m.Productions),
+      },
     ],
   },
   {

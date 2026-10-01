@@ -1,0 +1,349 @@
+import { DecimalPipe } from '@angular/common';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { provideNativeDateAdapter } from '@angular/material/core';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { Product } from '../../products/data-access/product.model';
+import { ProductService } from '../../products/data-access/product.service';
+import { Supply, SupplyUnit } from '../../supplies/data-access/supply.model';
+import { SupplyService } from '../../supplies/data-access/supply.service';
+import { ToastService } from '../../../shared/services/toast.service';
+import {
+    CreateProductionRequest,
+    ProductionProcessType,
+    ProductionSupplyItemType,
+} from '../data-access/production.model';
+import { ProductionService } from '../data-access/production.service';
+
+type ProductionSupplyFormValue = {
+    supplyId: string;
+    quantity: number;
+    reason: string;
+};
+
+@Component({
+    imports: [
+        DecimalPipe,
+        MatButtonModule,
+        MatDatepickerModule,
+        MatDialogModule,
+        MatFormFieldModule,
+        MatIconModule,
+        MatInputModule,
+        MatSelectModule,
+        ReactiveFormsModule,
+    ],
+    providers: [provideNativeDateAdapter()],
+    selector: 'app-production-form-dialog',
+    styleUrl: './production-form-dialog.scss',
+    templateUrl: './production-form-dialog.html',
+})
+export class ProductionFormDialog implements OnInit {
+    private readonly formBuilder = inject(FormBuilder);
+    private readonly productionService = inject(ProductionService);
+    private readonly productService = inject(ProductService);
+    private readonly supplyService = inject(SupplyService);
+    private readonly toast = inject(ToastService);
+    private readonly dialogRef = inject(MatDialogRef<ProductionFormDialog>);
+
+    protected readonly products = signal<Product[]>([]);
+    protected readonly supplies = signal<Supply[]>([]);
+    protected readonly loadingOptions = signal(true);
+    protected readonly saving = signal(false);
+    protected readonly error = signal<string | null>(null);
+
+    protected readonly processOptions: { value: ProductionProcessType; label: string }[] = [
+        { value: 'BOTTLING', label: 'Embotellado' },
+        { value: 'LABELING', label: 'Etiquetado' },
+        { value: 'PACKAGING', label: 'Empaque' },
+        { value: 'OTHER', label: 'Otro' },
+    ];
+
+    protected readonly form = this.formBuilder.nonNullable.group({
+        productionDate: this.formBuilder.control<Date | null>(new Date(), [Validators.required]),
+        productionTime: this.formBuilder.nonNullable.control(this.currentTimeOption(), [Validators.required]),
+        processes: this.formBuilder.nonNullable.control<ProductionProcessType[]>([], [Validators.required]),
+        notes: ['', [Validators.maxLength(500)]],
+        outputs: this.formBuilder.array([this.createOutputGroup()]),
+        consumedSupplies: this.formBuilder.array([this.createSupplyGroup('CONSUMED')]),
+        lossSupplies: this.formBuilder.array([]),
+    });
+
+    protected readonly outputControls = computed(() => this.outputs.controls);
+    protected readonly consumedSupplyControls = computed(() => this.consumedSupplies.controls);
+    protected readonly lossSupplyControls = computed(() => this.lossSupplies.controls);
+
+    ngOnInit(): void {
+        this.loadOptions();
+    }
+
+    protected get outputs() {
+        return this.form.controls.outputs as FormArray;
+    }
+
+    protected get consumedSupplies() {
+        return this.form.controls.consumedSupplies as FormArray;
+    }
+
+    protected get lossSupplies() {
+        return this.form.controls.lossSupplies as FormArray;
+    }
+
+    protected addOutput() {
+        this.outputs.push(this.createOutputGroup());
+    }
+
+    protected removeOutput(index: number) {
+        if (this.outputs.length > 1) {
+            this.outputs.removeAt(index);
+        }
+    }
+
+    protected addConsumedSupply() {
+        this.consumedSupplies.push(this.createSupplyGroup('CONSUMED'));
+    }
+
+    protected removeConsumedSupply(index: number) {
+        this.consumedSupplies.removeAt(index);
+    }
+
+    protected addLossSupply() {
+        this.lossSupplies.push(this.createSupplyGroup('LOSS'));
+    }
+
+    protected removeLossSupply(index: number) {
+        this.lossSupplies.removeAt(index);
+    }
+
+    protected close() {
+        this.dialogRef.close(false);
+    }
+
+    protected submit() {
+        if (this.form.invalid) {
+            this.form.markAllAsTouched();
+            return;
+        }
+
+        const validationError = this.validateProduction();
+
+        if (validationError) {
+            this.error.set(validationError);
+            return;
+        }
+
+        this.saving.set(true);
+        this.error.set(null);
+
+        const value = this.form.getRawValue();
+        const consumedSupplies = value.consumedSupplies as ProductionSupplyFormValue[];
+        const lossSupplies = value.lossSupplies as ProductionSupplyFormValue[];
+
+        const request: CreateProductionRequest = {
+            productionDateTime: this.toProductionDateTime(value.productionDate, value.productionTime),
+            notes: this.toNullableString(value.notes),
+            processes: value.processes,
+            outputs: value.outputs.map((item) => ({
+                productId: item.productId,
+                quantity: item.quantity,
+            })),
+            supplies: [
+                ...consumedSupplies.map((item) => ({
+                    supplyId: item.supplyId,
+                    type: 'CONSUMED' as ProductionSupplyItemType,
+                    quantity: item.quantity,
+                    reason: null,
+                })),
+                ...lossSupplies.map((item) => ({
+                    supplyId: item.supplyId,
+                    type: 'LOSS' as ProductionSupplyItemType,
+                    quantity: item.quantity,
+                    reason: this.toNullableString(item.reason),
+                })),
+            ],
+        };
+
+        this.productionService.createProduction(request).subscribe({
+            next: () => {
+                this.saving.set(false);
+                this.dialogRef.close(true);
+            },
+            error: () => {
+                this.error.set('No fue posible registrar la producción.');
+                this.toast.error('No fue posible registrar la producción.');
+                this.saving.set(false);
+            },
+        });
+    }
+
+    protected hasError(control: any, errorName: string) {
+        return control.touched && control.hasError(errorName);
+    }
+
+    protected productName(id: string) {
+        return this.products().find((product) => product.id === id)?.name ?? '';
+    }
+
+    protected supplyLabel(id: string) {
+        const supply = this.supplies().find((item) => item.id === id);
+
+        if (!supply) {
+            return '';
+        }
+
+        return `${supply.name} (${this.unitLabel(supply.unit)})`;
+    }
+
+    protected unitLabel(unit: SupplyUnit) {
+        switch (unit) {
+            case 'UNIT':
+                return 'Unidad';
+            case 'GRAM':
+                return 'Gramo';
+            case 'KILOGRAM':
+                return 'Kilogramo';
+            case 'MILLILITER':
+                return 'Mililitro';
+            case 'LITER':
+                return 'Litro';
+            case 'METER':
+                return 'Metro';
+            case 'PACKAGE':
+                return 'Paquete';
+        }
+    }
+
+    private createOutputGroup() {
+        return this.formBuilder.nonNullable.group({
+            productId: ['', [Validators.required]],
+            quantity: [1, [Validators.required, Validators.min(1)]],
+        });
+    }
+
+    private createSupplyGroup(type: ProductionSupplyItemType) {
+        return this.formBuilder.nonNullable.group({
+            supplyId: ['', [Validators.required]],
+            quantity: [1, [Validators.required, Validators.min(0.001)]],
+            reason: ['', type === 'LOSS' ? [Validators.required, Validators.maxLength(255)] : [Validators.maxLength(255)]],
+        });
+    }
+
+    private loadOptions() {
+        this.loadingOptions.set(true);
+
+        this.productService.getProductOptions().subscribe({
+            next: (products) => {
+                this.products.set(products);
+                this.loadSupplyOptions();
+            },
+            error: () => {
+                this.error.set('No fue posible cargar los productos.');
+                this.loadingOptions.set(false);
+            },
+        });
+    }
+
+    private loadSupplyOptions() {
+        this.supplyService.getSupplyOptions().subscribe({
+            next: (supplies) => {
+                this.supplies.set(supplies);
+                this.loadingOptions.set(false);
+            },
+            error: () => {
+                this.error.set('No fue posible cargar los insumos.');
+                this.loadingOptions.set(false);
+            },
+        });
+    }
+
+    private validateProduction() {
+        const value = this.form.getRawValue();
+        const consumedSupplies = value.consumedSupplies as ProductionSupplyFormValue[];
+        const lossSupplies = value.lossSupplies as ProductionSupplyFormValue[];
+
+        if (value.outputs.length === 0) {
+            return 'Agrega al menos un producto generado.';
+        }
+
+        if (consumedSupplies.length + lossSupplies.length === 0) {
+            return 'Agrega al menos un insumo usado o una merma.';
+        }
+
+        if (new Set(value.outputs.map((item) => item.productId)).size !== value.outputs.length) {
+            return 'No repitas productos generados.';
+        }
+
+        const supplyKeys = [
+            ...consumedSupplies.map((item) => `${item.supplyId}:CONSUMED`),
+            ...lossSupplies.map((item) => `${item.supplyId}:LOSS`),
+        ];
+
+        if (new Set(supplyKeys).size !== supplyKeys.length) {
+            return 'No repitas el mismo insumo con el mismo tipo.';
+        }
+
+        const requestedBySupplyId = new Map<string, number>();
+
+        for (const item of [...consumedSupplies, ...lossSupplies]) {
+            requestedBySupplyId.set(
+                item.supplyId,
+                (requestedBySupplyId.get(item.supplyId) ?? 0) + Number(item.quantity)
+            );
+        }
+
+        for (const [supplyId, requestedQuantity] of requestedBySupplyId.entries()) {
+            const supply = this.supplies().find((item) => item.id === supplyId);
+
+            if (!supply) {
+                continue;
+            }
+
+            if (requestedQuantity > supply.stock) {
+                return `Stock insuficiente para ${supply.name}. Disponible: ${this.formatQuantity(supply.stock)} ${this.unitLabel(supply.unit)}, solicitado: ${this.formatQuantity(requestedQuantity)} ${this.unitLabel(supply.unit)}.`;
+            }
+        }
+
+        return null;
+    }
+
+    private formatQuantity(quantity: number) {
+        return quantity.toLocaleString('es-CO', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 3,
+        });
+    }
+
+    private currentTimeOption() {
+        const now = new Date();
+        const roundedMinutes = Math.floor(now.getMinutes() / 15) * 15;
+
+        return `${now.getHours().toString().padStart(2, '0')}:${roundedMinutes.toString().padStart(2, '0')}`;
+    }
+
+    private toProductionDateTime(date: Date | null, time: string) {
+        if (!date) {
+            return '';
+        }
+
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+
+        return `${year}-${month}-${day}T${time}`;
+    }
+
+    private toNullableString(value: string | null | undefined) {
+        if (!value) {
+            return null;
+        }
+
+        const trimmedValue = value.trim();
+        return trimmedValue.length > 0 ? trimmedValue : null;
+    }
+}

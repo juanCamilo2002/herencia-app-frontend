@@ -44,6 +44,7 @@ export const APP_NAVIGATION_ENTRIES: AppNavigationEntry[] = [
       { type: 'item', label: 'Inventario productos', icon: 'inventory_2', route: '/inventory', permission: 'inventory:read' },
       { type: 'item', label: 'Insumos', icon: 'science', route: '/supplies', permission: 'supplies:read' },
       { type: 'item', label: 'Inventario insumos', icon: 'warehouse', route: '/supply-inventory', permission: 'supply-inventory:read' },
+      { type: 'item', label: 'Producciones', icon: 'precision_manufacturing', route: '/productions', permission: 'productions:read' },
     ],
   },
   {

@@ -1,0 +1,95 @@
+<section class="production-detail">
+  <header class="production-detail__header">
+    <div>
+      <span>Producción</span>
+      <h2>Detalle de producción</h2>
+      <p>{{ production.productionDateTime | date: 'dd/MM/yyyy HH:mm' }}</p>
+    </div>
+
+    <button mat-icon-button type="button" aria-label="Cerrar" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </header>
+
+  <section class="production-detail__meta">
+    <div>
+      <span>Estado</span>
+      <strong>Completada</strong>
+    </div>
+
+    <div>
+      <span>Registrado por</span>
+      <strong>{{ production.registeredByName }}</strong>
+    </div>
+
+    <div>
+      <span>Fecha registro</span>
+      <strong>{{ production.createdAt | date: 'dd/MM/yyyy HH:mm' }}</strong>
+    </div>
+  </section>
+
+  <section class="production-detail__section">
+    <h3>Procesos realizados</h3>
+
+    <div class="production-detail__tags">
+      @for (process of production.processes; track process.id) {
+      <span>{{ processLabel(process.type) }}</span>
+      }
+    </div>
+  </section>
+
+  <section class="production-detail__section">
+    <h3>Productos generados</h3>
+
+    <div class="production-detail__list">
+      @for (item of production.outputs; track item.id) {
+      <article>
+        <strong>{{ item.productName }}</strong>
+        <span>{{ item.quantity }} unidades</span>
+      </article>
+      }
+    </div>
+  </section>
+
+  <section class="production-detail__section">
+    <h3>Insumos usados</h3>
+
+    @if (consumedItems().length === 0) {
+    <p class="production-detail__muted">No hay insumos usados.</p>
+    } @else {
+    <div class="production-detail__list">
+      @for (item of consumedItems(); track item.id) {
+      <article>
+        <strong>{{ item.supplyName }}</strong>
+        <span>{{ item.quantity | number: '1.0-3' }} {{ unitLabel(item.supplyUnit) }}</span>
+      </article>
+      }
+    </div>
+    }
+  </section>
+
+  <section class="production-detail__section">
+    <h3>Mermas / pérdidas</h3>
+
+    @if (lossItems().length === 0) {
+    <p class="production-detail__muted">No hay mermas registradas.</p>
+    } @else {
+    <div class="production-detail__list">
+      @for (item of lossItems(); track item.id) {
+      <article>
+        <strong>{{ item.supplyName }}</strong>
+        <span>{{ item.quantity | number: '1.0-3' }} {{ unitLabel(item.supplyUnit) }}</span>
+        <small>{{ item.reason || 'Sin motivo' }}</small>
+      </article>
+      }
+    </div>
+    }
+  </section>
+
+  @if (production.notes) {
+  <section class="production-detail__section">
+    <h3>Observaciones</h3>
+    <p class="production-detail__notes">{{ production.notes }}</p>
+  </section>
+  }
+</section>

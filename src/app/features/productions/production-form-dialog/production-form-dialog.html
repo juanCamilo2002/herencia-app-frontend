@@ -1,0 +1,181 @@
+<section class="app-form-dialog production-form">
+  <header class="app-form-dialog__header">
+    <div>
+      <span>Producciones</span>
+      <h2>Nueva producción</h2>
+      <p>Registra productos generados, insumos usados, mermas y procesos realizados.</p>
+    </div>
+
+    <button mat-icon-button type="button" aria-label="Cerrar" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </header>
+
+  <form class="app-form-dialog__form" [formGroup]="form" (ngSubmit)="submit()">
+    @if (error()) {
+    <p class="app-form-dialog__error">{{ error() }}</p>
+    }
+
+    <mat-form-field appearance="outline">
+      <mat-label>Fecha producción</mat-label>
+      <input matInput [matDatepicker]="productionDatePicker" formControlName="productionDate" />
+      <mat-datepicker-toggle matIconSuffix [for]="productionDatePicker" />
+      <mat-datepicker #productionDatePicker />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Hora producción</mat-label>
+      <input matInput type="time" formControlName="productionTime" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="app-form-dialog__field--full">
+      <mat-label>Procesos realizados</mat-label>
+      <mat-select formControlName="processes" multiple>
+        @for (process of processOptions; track process.value) {
+        <mat-option [value]="process.value">{{ process.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <section class="production-form__section app-form-dialog__field--full">
+      <header>
+        <div>
+          <h3>Productos generados</h3>
+          <p>Productos finales que ingresan al inventario.</p>
+        </div>
+
+        <button mat-button type="button" (click)="addOutput()">
+          <mat-icon>add</mat-icon>
+          Agregar producto
+        </button>
+      </header>
+
+      <div formArrayName="outputs" class="production-form__rows">
+        @for (group of outputControls(); track $index; let index = $index) {
+        <div class="production-form__row" [formGroupName]="index">
+          <mat-form-field appearance="outline">
+            <mat-label>Producto</mat-label>
+            <mat-select formControlName="productId" [disabled]="loadingOptions()">
+              @for (product of products(); track product.id) {
+              <mat-option [value]="product.id">{{ product.name }} - Stock actual: {{ product.stock }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Cantidad</mat-label>
+            <input matInput type="number" formControlName="quantity" />
+          </mat-form-field>
+
+          <button mat-icon-button type="button" aria-label="Quitar producto" (click)="removeOutput(index)"
+            [disabled]="outputs.length === 1">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+        }
+      </div>
+    </section>
+
+    <section class="production-form__section app-form-dialog__field--full">
+      <header>
+        <div>
+          <h3>Insumos usados</h3>
+          <p>Insumos que se descuentan por consumo normal.</p>
+        </div>
+
+        <button mat-button type="button" (click)="addConsumedSupply()">
+          <mat-icon>add</mat-icon>
+          Agregar insumo
+        </button>
+      </header>
+
+      <div formArrayName="consumedSupplies" class="production-form__rows">
+        @for (group of consumedSupplyControls(); track $index; let index = $index) {
+        <div class="production-form__row" [formGroupName]="index">
+          <mat-form-field appearance="outline">
+            <mat-label>Insumo</mat-label>
+            <mat-select formControlName="supplyId" [disabled]="loadingOptions()">
+              @for (supply of supplies(); track supply.id) {
+              <mat-option [value]="supply.id">
+                {{ supply.name }} - Stock actual: {{ supply.stock | number: '1.0-3' }} {{ unitLabel(supply.unit) }}
+              </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Cantidad</mat-label>
+            <input matInput type="number" step="0.001" formControlName="quantity" />
+          </mat-form-field>
+
+          <button mat-icon-button type="button" aria-label="Quitar insumo" (click)="removeConsumedSupply(index)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+        }
+      </div>
+    </section>
+
+    <section class="production-form__section app-form-dialog__field--full">
+      <header>
+        <div>
+          <h3>Mermas / pérdidas</h3>
+          <p>Insumos dañados, perdidos o no utilizables.</p>
+        </div>
+
+        <button mat-button type="button" (click)="addLossSupply()">
+          <mat-icon>add</mat-icon>
+          Agregar merma
+        </button>
+      </header>
+
+      <div formArrayName="lossSupplies" class="production-form__rows">
+        @for (group of lossSupplyControls(); track $index; let index = $index) {
+        <div class="production-form__row production-form__row--loss" [formGroupName]="index">
+          <mat-form-field appearance="outline">
+            <mat-label>Insumo</mat-label>
+            <mat-select formControlName="supplyId" [disabled]="loadingOptions()">
+              @for (supply of supplies(); track supply.id) {
+              <mat-option [value]="supply.id">
+                {{ supply.name }} - Stock actual: {{ supply.stock | number: '1.0-3' }} {{ unitLabel(supply.unit) }}
+              </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Cantidad</mat-label>
+            <input matInput type="number" step="0.001" formControlName="quantity" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Motivo</mat-label>
+            <input matInput formControlName="reason" autocomplete="off" />
+          </mat-form-field>
+
+          <button mat-icon-button type="button" aria-label="Quitar merma" (click)="removeLossSupply(index)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+        }
+      </div>
+    </section>
+
+    <mat-form-field appearance="outline" class="app-form-dialog__field--full">
+      <mat-label>Observaciones</mat-label>
+      <textarea matInput formControlName="notes" rows="3"></textarea>
+    </mat-form-field>
+
+    <footer class="app-form-dialog__actions">
+      <button mat-button type="button" [disabled]="saving()" (click)="close()">Cancelar</button>
+
+      <button mat-flat-button type="submit" [disabled]="saving() || loadingOptions() || form.invalid">
+        @if (saving()) {
+        Guardando...
+        } @else {
+        Registrar producción
+        }
+      </button>
+    </footer>
+  </form>
+</section>
