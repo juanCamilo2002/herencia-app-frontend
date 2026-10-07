@@ -98,11 +98,7 @@
 
     <mat-form-field appearance="outline">
       <mat-label>Hora del movimiento</mat-label>
-      <mat-select formControlName="movementTime">
-        @for (time of timeOptions; track time) {
-        <mat-option [value]="time">{{ time }}</mat-option>
-        }
-      </mat-select>
+      <input matInput type="time" formControlName="movementTime" />
 
       @if (hasError('movementTime', 'required')) {
       <mat-error>La hora del movimiento es obligatoria.</mat-error>

@@ -89,7 +89,6 @@ export class SaleFormDialog implements OnInit {
     this.session.hasPermission('sales:custom-price')
   );
 
-  protected readonly timeOptions = this.createTimeOptions();
 
   protected readonly form: SaleForm = this.formBuilder.group({
     customerId: this.formBuilder.control<string | null>(null),
@@ -350,21 +349,8 @@ export class SaleFormDialog implements OnInit {
 
   private currentTimeOption() {
     const now = new Date();
-    const roundedMinutes = Math.floor(now.getMinutes() / 15) * 15;
 
-    return `${now.getHours().toString().padStart(2, '0')}:${roundedMinutes.toString().padStart(2, '0')}`;
-  }
-
-  private createTimeOptions() {
-    const options: string[] = [];
-
-    for (let hour = 0; hour < 24; hour++) {
-      for (const minute of [0, 15, 30, 45]) {
-        options.push(`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
-      }
-    }
-
-    return options;
+    return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
   }
 
   private toSaleDateTime(date: Date | null, time: string) {

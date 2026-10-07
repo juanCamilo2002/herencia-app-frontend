@@ -29,11 +29,7 @@
 
     <mat-form-field appearance="outline">
       <mat-label>Hora de venta</mat-label>
-      <mat-select formControlName="saleTime">
-        @for (time of timeOptions; track time) {
-        <mat-option [value]="time">{{ time }}</mat-option>
-        }
-      </mat-select>
+      <input matInput type="time" formControlName="saleTime" />
 
       @if (hasError('saleTime', 'required')) {
       <mat-error>La hora de venta es obligatoria.</mat-error>

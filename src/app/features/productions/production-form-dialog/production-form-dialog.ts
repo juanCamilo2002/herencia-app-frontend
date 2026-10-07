@@ -373,9 +373,8 @@ export class ProductionFormDialog implements OnInit {
 
     private currentTimeOption() {
         const now = new Date();
-        const roundedMinutes = Math.floor(now.getMinutes() / 15) * 15;
 
-        return `${now.getHours().toString().padStart(2, '0')}:${roundedMinutes.toString().padStart(2, '0')}`;
+        return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
     }
 
     private toProductionDateTime(date: Date | null, time: string) {
