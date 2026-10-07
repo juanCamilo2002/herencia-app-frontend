@@ -12,8 +12,12 @@
   </header>
 
   <form class="app-form-dialog__form" [formGroup]="form" (ngSubmit)="submit()">
+    @if (productionValidationError(); as validationError) {
+      <p class="app-form-dialog__error">{{ validationError }}</p>
+    }
+
     @if (error()) {
-    <p class="app-form-dialog__error">{{ error() }}</p>
+      <p class="app-form-dialog__error">{{ error() }}</p>
     }
 
     <mat-form-field appearance="outline">
@@ -161,6 +165,46 @@
       </div>
     </section>
 
+    @if (supplyStockSummaries().length > 0) {
+      <section class="production-form__stock-summary app-form-dialog__field--full">
+        <header>
+          <div>
+            <h3>Resumen de stock de insumos</h3>
+            <p>Consumo normal y mermas se suman contra el mismo stock disponible.</p>
+          </div>
+        </header>
+
+        <div class="production-form__stock-items">
+          @for (item of supplyStockSummaries(); track item.supply.id) {
+          <article class="production-form__stock-item" [class.production-form__stock-item--error]="item.overStock">
+            <div>
+              <span>Insumo</span>
+              <strong>{{ item.supply.name }}</strong>
+            </div>
+
+            <div>
+              <span>Disponible</span>
+              <strong>{{ item.supply.stock | number: '1.0-3' }} {{ unitLabel(item.supply.unit) }}</strong>
+            </div>
+
+            <div>
+              <span>Solicitado</span>
+              <strong>{{ item.requested | number: '1.0-3' }} {{ unitLabel(item.supply.unit) }}</strong>
+              <small>
+                Usado: {{ item.consumed | number: '1.0-3' }} · Merma: {{ item.loss | number: '1.0-3' }}
+              </small>
+            </div>
+
+            <div>
+              <span>Restante</span>
+              <strong>{{ item.remaining | number: '1.0-3' }} {{ unitLabel(item.supply.unit) }}</strong>
+            </div>
+          </article>
+          }
+        </div>
+      </section>
+    }
+
     <mat-form-field appearance="outline" class="app-form-dialog__field--full">
       <mat-label>Observaciones</mat-label>
       <textarea matInput formControlName="notes" rows="3"></textarea>
@@ -169,7 +213,7 @@
     <footer class="app-form-dialog__actions">
       <button mat-button type="button" [disabled]="saving()" (click)="close()">Cancelar</button>
 
-      <button mat-flat-button type="submit" [disabled]="saving() || loadingOptions() || form.invalid">
+      <button mat-flat-button type="submit" [disabled]="saving() || loadingOptions() || form.invalid || productionValidationError() != null">
         @if (saving()) {
         Guardando...
         } @else {

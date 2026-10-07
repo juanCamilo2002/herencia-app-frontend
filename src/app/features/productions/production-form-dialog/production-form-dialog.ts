@@ -22,6 +22,7 @@ import {
 import { ProductionService } from '../data-access/production.service';
 import { supplyUnitLabel } from '../../supplies/data-access/supply-labels';
 import { PRODUCTION_PROCESS_OPTIONS } from '../data-access/production-labels';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 type ProductionSupplyFormValue = {
     supplyId: string;
@@ -77,6 +78,66 @@ export class ProductionFormDialog implements OnInit {
     protected readonly consumedSupplyControls = computed(() => this.consumedSupplies.controls);
     protected readonly lossSupplyControls = computed(() => this.lossSupplies.controls);
 
+    protected readonly productionValidationError = computed(() => {
+        this.formValue();
+
+        return this.validateProduction();
+    });
+
+    protected readonly formValue = toSignal(this.form.valueChanges, {
+        initialValue: this.form.getRawValue(),
+    });
+
+    protected readonly supplyStockSummaries = computed(() => {
+        this.formValue();
+
+        const value = this.form.getRawValue();
+        const consumedSupplies = value.consumedSupplies as ProductionSupplyFormValue[];
+        const lossSupplies = value.lossSupplies as ProductionSupplyFormValue[];
+
+        const requestedBySupplyId = new Map<string, { consumed: number, loss: number }>();
+
+        for (const item of consumedSupplies) {
+            if (!item.supplyId) {
+                continue;
+            }
+
+            const current = requestedBySupplyId.get(item.supplyId) ?? { consumed: 0, loss: 0 };
+            current.consumed += Number(item.quantity) || 0;
+            requestedBySupplyId.set(item.supplyId, current);
+        }
+
+        for (const item of lossSupplies) {
+            if (!item.supplyId) {
+                continue;
+            }
+            const current = requestedBySupplyId.get(item.supplyId) ?? { consumed: 0, loss: 0 };
+            current.loss += Number(item.quantity) || 0;
+            requestedBySupplyId.set(item.supplyId, current);
+        }
+
+        return Array.from(requestedBySupplyId.entries())
+            .map(([supplyId, quantities]) => {
+                const supply = this.supplies().find((item) => item.id === supplyId);
+
+                if (!supply) {
+                    return null;
+                }
+
+                const requested = quantities.consumed + quantities.loss;
+
+                return {
+                    supply,
+                    consumed: quantities.consumed,
+                    loss: quantities.loss,
+                    requested,
+                    remaining: supply.stock - requested,
+                    overStock: requested > supply.stock,
+                };
+            })
+            .filter((item) => item != null);
+    });
+
     ngOnInit(): void {
         this.loadOptions();
     }
@@ -129,10 +190,10 @@ export class ProductionFormDialog implements OnInit {
             return;
         }
 
-        const validationError = this.validateProduction();
+        const validationError = this.productionValidationError();
 
         if (validationError) {
-            this.error.set(validationError);
+            this.error.set(null);
             return;
         }
 
@@ -254,13 +315,21 @@ export class ProductionFormDialog implements OnInit {
             return 'Agrega al menos un insumo usado o una merma.';
         }
 
-        if (new Set(value.outputs.map((item) => item.productId)).size !== value.outputs.length) {
+        const outputProductIds = value.outputs
+            .map((item) => item.productId)
+            .filter(Boolean);
+
+        if (new Set(outputProductIds).size !== outputProductIds.length) {
             return 'No repitas productos generados.';
         }
 
         const supplyKeys = [
-            ...consumedSupplies.map((item) => `${item.supplyId}:CONSUMED`),
-            ...lossSupplies.map((item) => `${item.supplyId}:LOSS`),
+            ...consumedSupplies
+                .filter((item) => item.supplyId)
+                .map((item) => `${item.supplyId}:CONSUMED`),
+            ...lossSupplies
+                .filter((item) => item.supplyId)
+                .map((item) => `${item.supplyId}:LOSS`),
         ];
 
         if (new Set(supplyKeys).size !== supplyKeys.length) {
@@ -270,6 +339,10 @@ export class ProductionFormDialog implements OnInit {
         const requestedBySupplyId = new Map<string, number>();
 
         for (const item of [...consumedSupplies, ...lossSupplies]) {
+            if (!item.supplyId) {
+                continue;
+            }
+
             requestedBySupplyId.set(
                 item.supplyId,
                 (requestedBySupplyId.get(item.supplyId) ?? 0) + Number(item.quantity)
