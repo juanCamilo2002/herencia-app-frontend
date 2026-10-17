@@ -6,19 +6,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { Production, ProductionSupplyItem } from '../data-access/production.model';
 import { supplyUnitLabel } from '../../supplies/data-access/supply-labels';
 import { productionProcessLabel } from '../data-access/production-labels';
+import { StatusBadge } from '../../../shared/components/status-badge/status-badge';
 
 export type ProductionDetailDialogData = {
   production: Production;
 };
 
 @Component({
-  imports: [
-    DatePipe,
-    DecimalPipe,
-    MatButtonModule,
-    MatDialogModule,
-    MatIconModule,
-  ],
+  imports: [DatePipe, DecimalPipe, MatButtonModule, MatDialogModule, MatIconModule, StatusBadge],
   selector: 'app-production-detail-dialog',
   styleUrl: './production-detail-dialog.scss',
   templateUrl: './production-detail-dialog.html',

@@ -9,6 +9,7 @@ import { MatTableModule } from '@angular/material/table';
 import { AuthSessionService } from '../../core/auth/auth-session.service';
 import { ConfirmDialog } from '../../shared/components/confirm-dialog/confirm-dialog';
 import { MetricCard } from '../../shared/components/metric-card/metric-card';
+import { StatusBadge } from '../../shared/components/status-badge/status-badge';
 import { ToastService } from '../../shared/services/toast.service';
 import { Role } from './data-access/role.model';
 import { RoleService } from './data-access/role.service';
@@ -24,6 +25,7 @@ import { RolePermissionsDialog } from './role-permissions-dialog/role-permission
     MatSortModule,
     MatTableModule,
     MetricCard,
+    StatusBadge,
   ],
   selector: 'app-roles',
   styleUrl: './roles.scss',
@@ -40,24 +42,18 @@ export class Roles implements OnInit {
   protected readonly error = signal<string | null>(null);
   protected readonly sort = signal<Sort>({ active: 'name', direction: 'asc' });
 
-  protected readonly canCreateRole = computed(() =>
-    this.session.hasPermission('roles:create')
-  );
+  protected readonly canCreateRole = computed(() => this.session.hasPermission('roles:create'));
 
-  protected readonly canUpdateRole = computed(() =>
-    this.session.hasPermission('roles:update')
-  );
+  protected readonly canUpdateRole = computed(() => this.session.hasPermission('roles:update'));
 
-  protected readonly canDisableRole = computed(() =>
-    this.session.hasPermission('roles:disable')
-  );
+  protected readonly canDisableRole = computed(() => this.session.hasPermission('roles:disable'));
 
   protected readonly canAssignPermissions = computed(() =>
-    this.session.hasPermission('roles:assign-permissions')
+    this.session.hasPermission('roles:assign-permissions'),
   );
 
-  protected readonly hasRoleActions = computed(() =>
-    this.canUpdateRole() || this.canDisableRole() || this.canAssignPermissions()
+  protected readonly hasRoleActions = computed(
+    () => this.canUpdateRole() || this.canDisableRole() || this.canAssignPermissions(),
   );
 
   protected readonly displayedColumns = computed(() => [
@@ -86,9 +82,15 @@ export class Roles implements OnInit {
   });
 
   protected readonly totalRoles = computed(() => this.roles().length);
-  protected readonly activeRoles = computed(() => this.roles().filter((role) => role.active).length);
-  protected readonly inactiveRoles = computed(() => this.roles().filter((role) => !role.active).length);
-  protected readonly systemRoles = computed(() => this.roles().filter((role) => role.systemRole).length);
+  protected readonly activeRoles = computed(
+    () => this.roles().filter((role) => role.active).length,
+  );
+  protected readonly inactiveRoles = computed(
+    () => this.roles().filter((role) => !role.active).length,
+  );
+  protected readonly systemRoles = computed(
+    () => this.roles().filter((role) => role.systemRole).length,
+  );
 
   ngOnInit(): void {
     this.loadRoles();

@@ -1,4 +1,13 @@
+:host {
+  container-type: inline-size;
+  display: grid;
+  min-width: 0;
+}
+
 .metric-card {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-width: 0;
   border: 1px solid var(--color-border);
   border-radius: 6px;
   background: var(--color-surface);
@@ -11,6 +20,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  min-height: 36px;
 }
 
 .metric-card__label {
@@ -18,9 +28,13 @@
   color: var(--color-muted);
   font-size: 13px;
   font-weight: 650;
+  min-width: 0;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .metric-card__icon {
+  flex: 0 0 34px;
   display: grid;
   place-items: center;
   width: 34px;
@@ -41,15 +55,23 @@
   display: block;
   margin-top: 12px;
   color: var(--color-text);
-  font-size: 28px;
+  min-width: 0;
+  align-self: start;
+  font-size: clamp(18px, 9cqi, 28px);
   font-weight: 760;
   letter-spacing: -0.04em;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 
 .metric-card__hint {
   margin: 8px 0 0;
   color: var(--color-muted);
   font-size: 13px;
+  min-height: 2.8em;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .metric-card--primary .metric-card__value,

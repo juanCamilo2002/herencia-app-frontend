@@ -5,6 +5,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { MetricCard } from '../../shared/components/metric-card/metric-card';
+import { StatusBadge } from '../../shared/components/status-badge/status-badge';
 import { ProductService } from './data-access/product.service';
 import { Product, ProductSummary } from './data-access/product.model';
 import { MatButtonModule } from '@angular/material/button';
@@ -24,11 +25,12 @@ import { AuthSessionService } from '../../core/auth/auth-session.service';
     MatSortModule,
     MatTableModule,
     MetricCard,
-    MatPaginatorModule
+    StatusBadge,
+    MatPaginatorModule,
   ],
   selector: 'app-products',
   styleUrl: './products.scss',
-  templateUrl: './products.html'
+  templateUrl: './products.html',
 })
 export class Products implements OnInit {
   private readonly productService = inject(ProductService);
@@ -54,7 +56,7 @@ export class Products implements OnInit {
     'price',
     'stock',
     'status',
-    ...(this.hasProductActions() ? ['actions'] : [])
+    ...(this.hasProductActions() ? ['actions'] : []),
   ]);
 
   protected readonly sortedProducts = computed(() => this.products());
@@ -65,19 +67,19 @@ export class Products implements OnInit {
   protected readonly inventoryValue = computed(() => this.summary()?.inventoryValue ?? 0);
 
   protected readonly canCreateProduct = computed(() =>
-    this.session.hasPermission('products:create')
+    this.session.hasPermission('products:create'),
   );
 
   protected readonly canUpdateProduct = computed(() =>
-    this.session.hasPermission('products:update')
+    this.session.hasPermission('products:update'),
   );
 
   protected readonly canDeleteProduct = computed(() =>
-    this.session.hasPermission('products:delete')
+    this.session.hasPermission('products:delete'),
   );
 
-  protected readonly hasProductActions = computed(() =>
-    this.canUpdateProduct() || this.canDeleteProduct()
+  protected readonly hasProductActions = computed(
+    () => this.canUpdateProduct() || this.canDeleteProduct(),
   );
 
   ngOnInit(): void {
@@ -89,21 +91,23 @@ export class Products implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    this.productService.getProducts({
-      page: this.pageIndex(),
-      size: this.pageSize(),
-      sort: this.sortParam()
-    }).subscribe({
-      next: (page) => {
-        this.products.set(page.content);
-        this.totalElements.set(page.totalElements);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.error.set('No fue posible cargar los productos.');
-        this.loading.set(false);
-      }
-    });
+    this.productService
+      .getProducts({
+        page: this.pageIndex(),
+        size: this.pageSize(),
+        sort: this.sortParam(),
+      })
+      .subscribe({
+        next: (page) => {
+          this.products.set(page.content);
+          this.totalElements.set(page.totalElements);
+          this.loading.set(false);
+        },
+        error: () => {
+          this.error.set('No fue posible cargar los productos.');
+          this.loading.set(false);
+        },
+      });
   }
 
   private loadSummary() {
@@ -134,7 +138,6 @@ export class Products implements OnInit {
     return `${sort.active},${sort.direction}`;
   }
 
-
   protected isLowStock(product: Product) {
     return product.stock <= product.minimumStock;
   }
@@ -155,7 +158,7 @@ export class Products implements OnInit {
         this.loadSummary();
         this.loadProducts();
       }
-    })
+    });
   }
 
   protected openEditProductDialog(product: Product) {
@@ -166,7 +169,7 @@ export class Products implements OnInit {
       maxWidth: 'calc(100vw - 32px)',
       maxHeight: 'calc(100dvh - 32px)',
       panelClass: 'app-dialog-panel',
-      data: { product }
+      data: { product },
     });
 
     dialogRef.afterClosed().subscribe((updated) => {
@@ -188,15 +191,15 @@ export class Products implements OnInit {
         message: `Se desactivará "${product.name}" del catálogo. Podrás conservar su historial de ventas e inventario`,
         confirmText: 'Eliminar',
         cancelText: 'Cancelar',
-        tone: 'danger'
-      }
+        tone: 'danger',
+      },
     });
 
     dialogRef.afterClosed().subscribe((confirmed) => {
       if (confirmed) {
         this.deleteProduct(product);
       }
-    })
+    });
   }
 
   private deleteProduct(product: Product) {
@@ -208,8 +211,7 @@ export class Products implements OnInit {
       },
       error: () => {
         this.toast.error('No fue posible eliminar el producto.');
-      }
+      },
     });
   }
-
 }

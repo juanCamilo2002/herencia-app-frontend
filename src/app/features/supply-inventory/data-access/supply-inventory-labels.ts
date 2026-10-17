@@ -1,4 +1,5 @@
 import { SupplyMovementSourceType, SupplyMovementType } from './supply-inventory.model';
+import type { StatusBadgeTone } from '../../../shared/components/status-badge/status-badge';
 
 export function supplyMovementLabel(type: SupplyMovementType) {
   switch (type) {
@@ -26,16 +27,16 @@ export function supplyMovementIcon(type: SupplyMovementType) {
   }
 }
 
-export function supplyMovementTone(type: SupplyMovementType) {
+export function supplyMovementTone(type: SupplyMovementType): StatusBadgeTone {
   switch (type) {
     case 'INBOUND':
-      return 'movement-badge--success';
+      return 'success';
     case 'OUTBOUND':
-      return 'movement-badge--warning';
+      return 'warning';
     case 'ADJUSTMENT':
-      return 'movement-badge--info';
+      return 'primary';
     case 'LOSS':
-      return 'movement-badge--loss';
+      return 'danger';
   }
 }
 

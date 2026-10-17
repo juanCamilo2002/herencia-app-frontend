@@ -8,6 +8,7 @@ import { PageEvent, MatPaginatorModule } from '@angular/material/paginator';
 import { ToastService } from '../../shared/services/toast.service';
 import { InventoryMovementDialog } from './inventory-movement-dialog/inventory-movement-dialog';
 import { MetricCard } from '../../shared/components/metric-card/metric-card';
+import { StatusBadge } from '../../shared/components/status-badge/status-badge';
 import { InventoryService } from './data-access/inventory.service';
 import { InventorySummary, StockMovement } from './data-access/inventory.model';
 import { AuthSessionService } from '../../core/auth/auth-session.service';
@@ -25,11 +26,12 @@ import {
     MatButtonModule,
     MatTableModule,
     MetricCard,
-    MatPaginatorModule
+    StatusBadge,
+    MatPaginatorModule,
   ],
   selector: 'app-inventory',
   styleUrl: './inventory.scss',
-  templateUrl: './inventory.html'
+  templateUrl: './inventory.html',
 })
 export class Inventory implements OnInit {
   private readonly inventoryService = inject(InventoryService);
@@ -53,7 +55,7 @@ export class Inventory implements OnInit {
     'stock',
     'source',
     'reason',
-    'movementDateTime'
+    'movementDateTime',
   ];
 
   protected readonly movementLabel = stockMovementLabel;
@@ -67,9 +69,9 @@ export class Inventory implements OnInit {
   protected readonly adjustmenMovements = computed(() => this.summary()?.adjustmentMovements ?? 0);
   protected readonly lossMovements = computed(() => this.summary()?.lossMovements ?? 0);
 
-  protected readonly canCreateMovement = computed(() =>
-    this.session.hasPermission('inventory:create') &&
-    this.session.hasPermission('products:read')
+  protected readonly canCreateMovement = computed(
+    () =>
+      this.session.hasPermission('inventory:create') && this.session.hasPermission('products:read'),
   );
 
   ngOnInit(): void {
@@ -81,26 +83,28 @@ export class Inventory implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    this.inventoryService.getMovements({
-      page: this.pageIndex(),
-      size: this.pageSize(),
-      sort: 'movementDateTime,desc'
-    }).subscribe({
-      next: (page) => {
-        this.movements.set(page.content);
-        this.totalElements.set(page.totalElements);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.error.set('No fue posible cargar los movimientos de inventario.');
-        this.loading.set(false);
-      }
-    });
+    this.inventoryService
+      .getMovements({
+        page: this.pageIndex(),
+        size: this.pageSize(),
+        sort: 'movementDateTime,desc',
+      })
+      .subscribe({
+        next: (page) => {
+          this.movements.set(page.content);
+          this.totalElements.set(page.totalElements);
+          this.loading.set(false);
+        },
+        error: () => {
+          this.error.set('No fue posible cargar los movimientos de inventario.');
+          this.loading.set(false);
+        },
+      });
   }
 
   private loadSummary() {
     this.inventoryService.getSummary().subscribe({
-      next: (summary) => this.summary.set(summary)
+      next: (summary) => this.summary.set(summary),
     });
   }
 

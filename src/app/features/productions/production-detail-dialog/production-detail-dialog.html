@@ -14,7 +14,7 @@
   <section class="production-detail__meta">
     <div>
       <span>Estado</span>
-      <strong>Completada</strong>
+      <app-status-badge label="Completada" tone="success" />
     </div>
 
     <div>
@@ -33,7 +33,7 @@
 
     <div class="production-detail__tags">
       @for (process of production.processes; track process.id) {
-      <span>{{ processLabel(process.type) }}</span>
+        <app-status-badge [label]="processLabel(process.type)" tone="primary" />
       }
     </div>
   </section>
@@ -43,10 +43,10 @@
 
     <div class="production-detail__list">
       @for (item of production.outputs; track item.id) {
-      <article>
-        <strong>{{ item.productName }}</strong>
-        <span>{{ item.quantity }} unidades</span>
-      </article>
+        <article>
+          <strong>{{ item.productName }}</strong>
+          <span>{{ item.quantity }} unidades</span>
+        </article>
       }
     </div>
   </section>
@@ -55,16 +55,16 @@
     <h3>Insumos usados</h3>
 
     @if (consumedItems().length === 0) {
-    <p class="production-detail__muted">No hay insumos usados.</p>
+      <p class="production-detail__muted">No hay insumos usados.</p>
     } @else {
-    <div class="production-detail__list">
-      @for (item of consumedItems(); track item.id) {
-      <article>
-        <strong>{{ item.supplyName }}</strong>
-        <span>{{ item.quantity | number: '1.0-3' }} {{ unitLabel(item.supplyUnit) }}</span>
-      </article>
-      }
-    </div>
+      <div class="production-detail__list">
+        @for (item of consumedItems(); track item.id) {
+          <article>
+            <strong>{{ item.supplyName }}</strong>
+            <span>{{ item.quantity | number: '1.0-3' }} {{ unitLabel(item.supplyUnit) }}</span>
+          </article>
+        }
+      </div>
     }
   </section>
 
@@ -72,24 +72,24 @@
     <h3>Mermas / pérdidas</h3>
 
     @if (lossItems().length === 0) {
-    <p class="production-detail__muted">No hay mermas registradas.</p>
+      <p class="production-detail__muted">No hay mermas registradas.</p>
     } @else {
-    <div class="production-detail__list">
-      @for (item of lossItems(); track item.id) {
-      <article>
-        <strong>{{ item.supplyName }}</strong>
-        <span>{{ item.quantity | number: '1.0-3' }} {{ unitLabel(item.supplyUnit) }}</span>
-        <small>{{ item.reason || 'Sin motivo' }}</small>
-      </article>
-      }
-    </div>
+      <div class="production-detail__list">
+        @for (item of lossItems(); track item.id) {
+          <article>
+            <strong>{{ item.supplyName }}</strong>
+            <span>{{ item.quantity | number: '1.0-3' }} {{ unitLabel(item.supplyUnit) }}</span>
+            <small>{{ item.reason || 'Sin motivo' }}</small>
+          </article>
+        }
+      </div>
     }
   </section>
 
   @if (production.notes) {
-  <section class="production-detail__section">
-    <h3>Observaciones</h3>
-    <p class="production-detail__notes">{{ production.notes }}</p>
-  </section>
+    <section class="production-detail__section">
+      <h3>Observaciones</h3>
+      <p class="production-detail__notes">{{ production.notes }}</p>
+    </section>
   }
 </section>

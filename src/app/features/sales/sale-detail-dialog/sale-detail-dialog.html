@@ -1,145 +1,529 @@
-<section class="sale-detail-dialog">
-  <header class="sale-detail-dialog__header">
+<section class="sale-detail">
+  <header class="app-form-dialog__header">
     <div>
-      <span>Venta #{{ saleCode() }}</span>
+      <span>Venta #{{ sale().id.slice(0, 8).toUpperCase() }}</span>
       <h2>Detalle de venta</h2>
-      <p>Venta realizada el {{ sale.saleDateTime | date: 'dd/MM/yyyy HH:mm' }}</p>
+      <p>{{ sale().customerName || 'Cliente general' }}</p>
     </div>
-
-    <button mat-icon-button type="button" aria-label="Cerrar" (click)="close()">
+    <button
+      mat-icon-button
+      type="button"
+      aria-label="Cerrar detalle de venta"
+      [disabled]="saving()"
+      (click)="close()"
+    >
       <mat-icon>close</mat-icon>
     </button>
   </header>
 
-  <section class="sale-detail-dialog__content">
-    <div class="sale-detail-dialog__summary">
-      <div>
-        <span>Cliente</span>
-        <strong>{{ customerLabel() }}</strong>
+  <div class="sale-detail__body">
+    @if (error()) {
+      <div class="sale-detail__error" role="alert">
+        <span>{{ error() }}</span>
+        <button mat-button type="button" [disabled]="saving() || loading()" (click)="load()">
+          Actualizar
+        </button>
       </div>
+    }
+    @if (loading()) {
+      <p class="sale-detail__loading" role="status">Actualizando información...</p>
+    }
 
-      <div>
-        <span>Estado</span>
-        <strong>{{ statusLabel(sale.status) }}</strong>
-      </div>
+    <div class="sale-detail__layout">
+      <aside class="sale-detail__sidebar" aria-label="Resumen de la venta">
+        <section class="sale-detail__panel">
+          <div class="sale-detail__section-heading">
+            <h3>Resumen</h3>
+            <app-status-badge
+              [label]="financialLabel(sale().paymentStatus)"
+              [tone]="financialTone(sale().paymentStatus)"
+            />
+          </div>
+          <div class="sale-detail__amounts">
+            <div class="sale-detail__amount-row">
+              <span>Total vendido</span>
+              <strong>{{ sale().total | currency: 'COP' : 'symbol-narrow' : '1.2-2' }}</strong>
+            </div>
+            <div class="sale-detail__amount-row">
+              <span>{{ sale().historical ? 'Pagado histórico' : 'Pagado confirmado' }}</span>
+              <strong>{{ sale().paidAmount | currency: 'COP' : 'symbol-narrow' : '1.2-2' }}</strong>
+            </div>
+            <div class="sale-detail__balance">
+              <span>Saldo pendiente</span>
+              <strong>{{
+                sale().balanceAmount | currency: 'COP' : 'symbol-narrow' : '1.2-2'
+              }}</strong>
+            </div>
+          </div>
+        </section>
 
-      <div>
-        <span>Productos</span>
-        <strong>{{ sale.items.length }}</strong>
-      </div>
+        <section class="sale-detail__panel">
+          <h3>Datos de la venta</h3>
+          <dl class="sale-detail__metadata">
+            <div>
+              <dt>Modalidad</dt>
+              <dd>{{ typeLabel(sale().paymentType) }}</dd>
+            </div>
+            <div>
+              <dt>Estado de venta</dt>
+              <dd><app-status-badge label="Completada" tone="success" size="small" /></dd>
+            </div>
+            <div>
+              <dt>Fecha de venta</dt>
+              <dd>{{ sale().saleDateTime | date: 'dd/MM/yyyy HH:mm' }}</dd>
+            </div>
+            <div>
+              <dt>Vendedor</dt>
+              <dd>{{ sale().employeeName || 'Sin empleado asignado' }}</dd>
+            </div>
+            <div>
+              <dt>Registrado por</dt>
+              <dd>{{ sale().registeredByName }}</dd>
+            </div>
+            <div>
+              <dt>Fecha de registro</dt>
+              <dd>{{ sale().createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+            </div>
+          </dl>
+          @if (sale().historical) {
+            <p class="sale-detail__notice">
+              Venta histórica conservada como pagada. No se conocen el método ni la fecha real de
+              cobro.
+            </p>
+          }
+        </section>
 
-      <div>
-        <span>Unidades</span>
-        <strong>{{ totalItems() }}</strong>
-      </div>
-    </div>
+        <details class="sale-detail__panel sale-detail__products" open>
+          <summary>
+            Productos <span class="sale-detail__muted">({{ sale().items.length }})</span>
+          </summary>
+          @for (item of sale().items; track item.productId) {
+            <article class="sale-detail__product">
+              <strong>{{ item.productName }}</strong>
+              <div class="sale-detail__amount-row">
+                <span
+                  >{{ item.quantity }} ×
+                  {{ item.unitPrice | currency: 'COP' : 'symbol-narrow' : '1.2-2' }}</span
+                >
+                <strong>{{ item.subtotal | currency: 'COP' : 'symbol-narrow' : '1.2-2' }}</strong>
+              </div>
+              @if (item.customPrice) {
+                <small class="sale-detail__muted"
+                  >Precio personalizado · Lista:
+                  {{ item.listPrice | currency: 'COP' : 'symbol-narrow' : '1.2-2' }}</small
+                >
+              }
+            </article>
+          } @empty {
+            <p class="sale-detail__muted">No hay productos.</p>
+          }
+        </details>
+      </aside>
 
-    <div class="sale-detail-dialog__traceability">
-      <div>
-        <span>Fecha venta</span>
-        <strong>{{ sale.saleDateTime | date: 'dd/MM/yyyy HH:mm' }}</strong>
-      </div>
+      <div class="sale-detail__workspace">
+        <mat-tab-group
+          [selectedIndex]="selectedTab()"
+          (selectedIndexChange)="selectTab($event)"
+          [preserveContent]="true"
+          [dynamicHeight]="true"
+          [mat-stretch-tabs]="false"
+          animationDuration="0ms"
+        >
+          <mat-tab label="Acuerdo de pago" [disabled]="saving()">
+            <section class="sale-detail__tab">
+              <h3>
+                {{ sale().paymentType === 'CASH' ? 'Pago de contado' : 'Calendario de cuotas' }}
+              </h3>
+              <p class="sale-detail__description">
+                Importes acordados, vencimientos y saldo de cada obligación.
+              </p>
+              <div class="sale-detail__installments">
+                @for (item of installments(); track item.id) {
+                  <article
+                    class="sale-detail__installment"
+                    [class.sale-detail__installment--overdue]="item.status === 'OVERDUE'"
+                  >
+                    <div class="sale-detail__section-heading">
+                      <div>
+                        <strong>{{
+                          sale().paymentType === 'CASH'
+                            ? 'Pago de contado'
+                            : 'Cuota ' + item.installmentNumber
+                        }}</strong>
+                        <p class="sale-detail__description">
+                          Vence {{ item.dueDate | date: 'dd/MM/yyyy' }}
+                        </p>
+                      </div>
+                      <div class="sale-detail__badges">
+                        <app-status-badge
+                          [label]="financialLabel(item.status)"
+                          [tone]="financialTone(item.status)"
+                        />
+                      </div>
+                    </div>
+                    <dl class="sale-detail__financial-grid">
+                      <div>
+                        <dt>Importe</dt>
+                        <dd>{{ item.amount | currency: 'COP' : 'symbol-narrow' : '1.2-2' }}</dd>
+                      </div>
+                      <div>
+                        <dt>Pagado</dt>
+                        <dd>{{ item.paidAmount | currency: 'COP' : 'symbol-narrow' : '1.2-2' }}</dd>
+                      </div>
+                      <div>
+                        <dt>Saldo</dt>
+                        <dd>
+                          {{ item.balanceAmount | currency: 'COP' : 'symbol-narrow' : '1.2-2' }}
+                        </dd>
+                      </div>
+                    </dl>
+                  </article>
+                } @empty {
+                  @if (!loading()) {
+                    <p class="sale-detail__empty">No hay obligaciones de pago para mostrar.</p>
+                  }
+                }
+              </div>
+            </section>
+          </mat-tab>
 
-      <div>
-        <span>Vendedor</span>
-        <strong>{{ sale.employeeName || 'Sin empleado asignado' }}</strong>
-      </div>
+          <mat-tab label="Pagos" [disabled]="saving()">
+            <section class="sale-detail__tab">
+              <div class="sale-detail__section-heading">
+                <div>
+                  <h3>Pagos de la venta</h3>
+                  <p class="sale-detail__description">
+                    Solo los pagos confirmados reducen la deuda.
+                  </p>
+                </div>
+                @if (can('register-payment')) {
+                  <button
+                    mat-flat-button
+                    type="button"
+                    [disabled]="saving() || loading()"
+                    (click)="openAction('create')"
+                  >
+                    Registrar pago
+                  </button>
+                }
+              </div>
+              <div class="sale-detail__payments">
+                @for (payment of payments(); track payment.id) {
+                  <article class="sale-detail__payment">
+                    <div class="sale-detail__section-heading">
+                      <strong class="sale-detail__payment-amount">{{
+                        payment.amount | currency: 'COP' : 'symbol-narrow' : '1.2-2'
+                      }}</strong>
+                      <app-status-badge
+                        [label]="paymentLabel(payment.status)"
+                        [tone]="paymentTone(payment.status)"
+                      />
+                    </div>
+                    <p class="sale-detail__description">
+                      {{ methodLabel(payment.method) }} ·
+                      {{ payment.paymentDateTime | date: 'dd/MM/yyyy HH:mm' }}
+                    </p>
+                    <small class="sale-detail__muted"
+                      >Registrado por {{ payment.registeredByName }}</small
+                    >
+                    @if (payment.notes) {
+                      <p class="sale-detail__comment">{{ payment.notes }}</p>
+                    }
+                    @if (payment.declineReason) {
+                      <p class="sale-detail__notice">
+                        Motivo de rechazo: {{ payment.declineReason }}
+                      </p>
+                    }
+                    <div class="sale-detail__actions">
+                      @if (payment.status === 'REGISTERED') {
+                        @if (can('update-payment')) {
+                          <button
+                            mat-button
+                            type="button"
+                            [disabled]="saving() || loading()"
+                            (click)="openAction('update', payment)"
+                          >
+                            Editar
+                          </button>
+                        }
+                        @if (can('confirm-payment')) {
+                          <button
+                            mat-button
+                            type="button"
+                            [disabled]="saving() || loading()"
+                            (click)="openAction('confirm', payment)"
+                          >
+                            Confirmar
+                          </button>
+                        }
+                        @if (can('decline-payment')) {
+                          <button
+                            mat-button
+                            type="button"
+                            [disabled]="saving() || loading()"
+                            (click)="openAction('decline', payment)"
+                          >
+                            Rechazar
+                          </button>
+                        }
+                      }
+                      @if (can('delete-payment')) {
+                        <button
+                          mat-button
+                          type="button"
+                          [disabled]="saving() || loading()"
+                          (click)="openAction('delete', payment)"
+                        >
+                          Eliminar
+                        </button>
+                      }
+                    </div>
+                  </article>
+                } @empty {
+                  @if (!loading()) {
+                    <p class="sale-detail__empty">
+                      No hay pagos activos. Puedes registrar el primero desde aquí.
+                    </p>
+                  }
+                }
+              </div>
+              <mat-paginator
+                [length]="paymentTotal()"
+                [pageIndex]="paymentPage()"
+                [pageSize]="pageSize"
+                [disabled]="loading() || saving()"
+                (page)="pagePayments($event)"
+              />
+            </section>
+          </mat-tab>
 
-      <div>
-        <span>Registrado por</span>
-        <strong>{{ sale.registeredByName }}</strong>
-      </div>
+          <mat-tab label="Historial" [disabled]="saving()">
+            <section class="sale-detail__tab">
+              <div class="sale-detail__section-heading">
+                <div>
+                  <h3>Actividad de la venta</h3>
+                  <p class="sale-detail__description">Acciones y notas, desde la más reciente.</p>
+                </div>
+                @if (can('add-note')) {
+                  <button
+                    mat-button
+                    type="button"
+                    [disabled]="saving() || loading()"
+                    (click)="openAction('note')"
+                  >
+                    Agregar nota
+                  </button>
+                }
+              </div>
+              <div class="sale-detail__timeline">
+                @for (entry of history(); track entry.id) {
+                  <article
+                    class="sale-detail__event"
+                    [class.sale-detail__event--note]="entry.eventType === 'NOTE_ADDED'"
+                  >
+                    <strong>{{ entry.title }}</strong>
+                    <small class="sale-detail__muted"
+                      >{{ entry.performedByName }} ·
+                      {{ entry.createdAt | date: 'dd/MM/yyyy HH:mm' }}</small
+                    >
+                    <p class="sale-detail__comment">{{ entry.comment }}</p>
+                    @if (entry.previousPaymentStatus || entry.newPaymentStatus) {
+                      <span class="sale-detail__transition"
+                        >{{
+                          entry.previousPaymentStatus
+                            ? paymentLabel(entry.previousPaymentStatus)
+                            : 'Nuevo'
+                        }}
+                        →
+                        {{
+                          entry.newPaymentStatus ? paymentLabel(entry.newPaymentStatus) : ''
+                        }}</span
+                      >
+                    }
+                    @if (entry.paymentId) {
+                      <button
+                        mat-button
+                        type="button"
+                        [disabled]="saving()"
+                        (click)="inspectPayment(entry.paymentId)"
+                      >
+                        Ver pago relacionado
+                      </button>
+                    }
+                    <details class="sale-detail__event-data">
+                      <summary>Datos del evento</summary>
+                      <pre>{{ entry.details | json }}</pre>
+                    </details>
+                  </article>
+                } @empty {
+                  @if (!loading()) {
+                    <p class="sale-detail__empty">No hay eventos para mostrar.</p>
+                  }
+                }
+              </div>
+              <mat-paginator
+                [length]="historyTotal()"
+                [pageIndex]="historyPage()"
+                [pageSize]="pageSize"
+                [disabled]="loading() || saving()"
+                (page)="pageHistory($event)"
+              />
+            </section>
+          </mat-tab>
+        </mat-tab-group>
 
-      <div>
-        <span>Fecha registro</span>
-        <strong>{{ sale.createdAt | date: 'dd/MM/yyyy HH:mm' }}</strong>
-      </div>
-    </div>
-
-    <div class="sale-detail-dialog__total">
-      <span>Total venta</span>
-      <strong>{{ sale.total | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
-    </div>
-
-    <div class="data-table data-table--md">
-      <table mat-table [dataSource]="sale.items">
-        <ng-container matColumnDef="product">
-          <th mat-header-cell *matHeaderCellDef>Producto</th>
-          <td mat-cell *matCellDef="let item">
-            <strong>{{ item.productName }}</strong>
-            <small>ID {{ item.productId.slice(0, 8) }}</small>
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="quantity">
-          <th mat-header-cell *matHeaderCellDef>Cantidad</th>
-          <td mat-cell *matCellDef="let item">
-            {{ item.quantity }}
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="unitPrice">
-          <th mat-header-cell *matHeaderCellDef>Precio unitario</th>
-          <td mat-cell *matCellDef="let item">
-            <strong>{{ item.unitPrice | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
-
-            @if (item.customPrice) {
-            <small>
-              Personalizado · Lista:
-              {{ item.listPrice | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
-            </small>
+        @if (action(); as currentAction) {
+          <section #actionEditor class="sale-detail__editor">
+            <h3>{{ actionTitles[currentAction] }}</h3>
+            @if (currentAction === 'create' || currentAction === 'update') {
+              <div [formGroup]="paymentForm" class="sale-detail__fields">
+                <mat-form-field appearance="outline"
+                  ><mat-label>Importe</mat-label
+                  ><input
+                    matInput
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    formControlName="amount"
+                  /><mat-hint>Puede cubrir varias cuotas.</mat-hint></mat-form-field
+                >
+                <mat-form-field appearance="outline"
+                  ><mat-label>Método de pago</mat-label
+                  ><mat-select formControlName="method">
+                    @for (method of methods; track method.value) {
+                      <mat-option [value]="method.value">{{ method.label }}</mat-option>
+                    }
+                  </mat-select></mat-form-field
+                >
+                <mat-form-field appearance="outline"
+                  ><mat-label>Fecha y hora real</mat-label
+                  ><input matInput type="datetime-local" formControlName="paymentDateTime"
+                /></mat-form-field>
+                <mat-form-field appearance="outline"
+                  ><mat-label>Observaciones</mat-label
+                  ><textarea matInput rows="3" maxlength="1000" formControlName="notes"></textarea>
+                </mat-form-field>
+              </div>
+              <p class="sale-detail__description">
+                El pago queda registrado. Debe confirmarse después para aplicarlo al saldo.
+              </p>
+            } @else if (currentAction === 'note') {
+              <div [formGroup]="noteForm" class="sale-detail__fields">
+                <mat-form-field appearance="outline"
+                  ><mat-label>Título</mat-label
+                  ><input matInput maxlength="160" formControlName="title"
+                /></mat-form-field>
+                <mat-form-field appearance="outline"
+                  ><mat-label>Comentario</mat-label
+                  ><textarea
+                    matInput
+                    rows="4"
+                    maxlength="2000"
+                    formControlName="comment"
+                  ></textarea>
+                </mat-form-field>
+              </div>
+              <p class="sale-detail__description">
+                Las notas son permanentes y no modifican saldos.
+              </p>
+            } @else {
+              @if (target(); as payment) {
+                <p>
+                  Pago de
+                  <strong>{{
+                    payment.amount | currency: 'COP' : 'symbol-narrow' : '1.2-2'
+                  }}</strong>
+                  por {{ methodLabel(payment.method) }}.
+                </p>
+              }
+              @if (currentAction === 'confirm') {
+                <p class="sale-detail__notice">
+                  Se distribuirá entre las cuotas pendientes, desde la de vencimiento más antiguo.
+                  Después no podrá editarse ni rechazarse.
+                </p>
+              }
+              @if (currentAction === 'delete') {
+                <p class="sale-detail__notice">
+                  El registro se conservará en el historial. Si estaba confirmado, su importe
+                  volverá al saldo de las cuotas originales.
+                </p>
+              }
+              @if (currentAction !== 'confirm') {
+                <mat-form-field appearance="outline"
+                  ><mat-label>Motivo obligatorio</mat-label
+                  ><textarea matInput rows="3" maxlength="1000" [formControl]="reason"></textarea>
+                </mat-form-field>
+              }
             }
-          </td>
-        </ng-container>
+            <div class="sale-detail__actions">
+              <button mat-button type="button" [disabled]="saving()" (click)="cancelAction()">
+                Cancelar
+              </button>
+              <button
+                mat-flat-button
+                type="button"
+                [disabled]="saving() || loading()"
+                (click)="submitAction()"
+              >
+                {{ saving() ? 'Guardando...' : actionTitles[currentAction] }}
+              </button>
+            </div>
+          </section>
+        }
 
-        <ng-container matColumnDef="subtotal">
-          <th mat-header-cell *matHeaderCellDef>Subtotal</th>
-          <td mat-cell *matCellDef="let item">
-            <strong>{{ item.subtotal | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
-          </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-      </table>
-    </div>
-
-    <div class="sale-detail-dialog__mobile-items">
-      @for (item of sale.items; track item.productId) {
-      <article class="sale-detail-item">
-        <strong>{{ item.productName }}</strong>
-        <small>ID {{ item.productId.slice(0, 8) }}</small>
-
-        <div class="sale-detail-item__grid">
-          <div>
-            <span>Cantidad</span>
-            <strong>{{ item.quantity }}</strong>
-          </div>
-
-          <div>
-            <span>Precio</span>
-            <strong>{{ item.unitPrice | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
-
-            @if (item.customPrice) {
-            <small>
-              Lista: {{ item.listPrice | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
-            </small>
+        @if (inspectedPayment(); as payment) {
+          <section #paymentInspection class="sale-detail__editor">
+            <div class="sale-detail__section-heading">
+              <h3>Pago #{{ payment.id.slice(0, 8).toUpperCase() }}</h3>
+              <button
+                mat-icon-button
+                type="button"
+                aria-label="Cerrar consulta del pago"
+                (click)="inspectedPayment.set(null)"
+              >
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+            <p>
+              <strong>{{ payment.amount | currency: 'COP' : 'symbol-narrow' : '1.2-2' }}</strong> ·
+              {{ methodLabel(payment.method) }}
+            </p>
+            <app-status-badge
+              [label]="paymentLabel(payment.status)"
+              [tone]="paymentTone(payment.status)"
+            />
+            <p class="sale-detail__description">
+              {{ payment.paymentDateTime | date: 'dd/MM/yyyy HH:mm' }} · Registrado por
+              {{ payment.registeredByName }}
+            </p>
+            @if (payment.notes) {
+              <p class="sale-detail__comment">{{ payment.notes }}</p>
             }
-          </div>
-
-          <div>
-            <span>Subtotal</span>
-            <strong>{{ item.subtotal | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
-          </div>
-        </div>
-      </article>
-      }
+            @if (payment.confirmedAt) {
+              <p>
+                Confirmado por {{ payment.confirmedByName }} ·
+                {{ payment.confirmedAt | date: 'dd/MM/yyyy HH:mm' }}
+              </p>
+            }
+            @if (payment.declinedAt) {
+              <p>
+                Rechazado por {{ payment.declinedByName }} ·
+                {{ payment.declinedAt | date: 'dd/MM/yyyy HH:mm' }}
+              </p>
+              <p>{{ payment.declineReason }}</p>
+            }
+            @if (payment.deletedAt) {
+              <div class="sale-detail__notice">
+                <strong>Pago eliminado</strong>
+                <p>
+                  {{ payment.deletedByName }} · {{ payment.deletedAt | date: 'dd/MM/yyyy HH:mm' }}
+                </p>
+                <p>{{ payment.deletionReason }}</p>
+              </div>
+            }
+          </section>
+        }
+      </div>
     </div>
-  </section>
-
-  <footer class="sale-detail-dialog__actions">
-    <button mat-flat-button type="button" (click)="close()">
-      Cerrar
-    </button>
-  </footer>
+  </div>
 </section>

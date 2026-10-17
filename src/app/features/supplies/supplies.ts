@@ -10,6 +10,7 @@ import { MatTableModule } from '@angular/material/table';
 import { AuthSessionService } from '../../core/auth/auth-session.service';
 import { ConfirmDialog } from '../../shared/components/confirm-dialog/confirm-dialog';
 import { MetricCard } from '../../shared/components/metric-card/metric-card';
+import { StatusBadge } from '../../shared/components/status-badge/status-badge';
 import { ToastService } from '../../shared/services/toast.service';
 import { Supply, SupplySummary } from './data-access/supply.model';
 import { SupplyService } from './data-access/supply.service';
@@ -27,6 +28,7 @@ import { supplyUnitLabel } from './data-access/supply-labels';
     MatSortModule,
     MatTableModule,
     MetricCard,
+    StatusBadge,
   ],
   selector: 'app-supplies',
   styleUrl: './supplies.scss',
@@ -47,7 +49,7 @@ export class Supplies implements OnInit {
   protected readonly pageIndex = signal(0);
   protected readonly pageSize = signal(20);
   protected readonly totalElements = signal(0);
-  
+
   protected readonly unitLabel = supplyUnitLabel;
 
   protected readonly displayedColumns = computed(() => [
@@ -64,12 +66,18 @@ export class Supplies implements OnInit {
   protected readonly lowStockSupplies = computed(() => this.summary()?.lowStockSupplies ?? 0);
   protected readonly inventoryValue = computed(() => this.summary()?.inventoryValue ?? 0);
 
-  protected readonly canCreateSupply = computed(() => this.session.hasPermission('supplies:create'));
-  protected readonly canUpdateSupply = computed(() => this.session.hasPermission('supplies:update'));
-  protected readonly canDeleteSupply = computed(() => this.session.hasPermission('supplies:delete'));
+  protected readonly canCreateSupply = computed(() =>
+    this.session.hasPermission('supplies:create'),
+  );
+  protected readonly canUpdateSupply = computed(() =>
+    this.session.hasPermission('supplies:update'),
+  );
+  protected readonly canDeleteSupply = computed(() =>
+    this.session.hasPermission('supplies:delete'),
+  );
 
-  protected readonly hasSupplyActions = computed(() =>
-    this.canUpdateSupply() || this.canDeleteSupply()
+  protected readonly hasSupplyActions = computed(
+    () => this.canUpdateSupply() || this.canDeleteSupply(),
   );
 
   ngOnInit(): void {
@@ -81,21 +89,23 @@ export class Supplies implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    this.supplyService.getSupplies({
-      page: this.pageIndex(),
-      size: this.pageSize(),
-      sort: this.sortParam(),
-    }).subscribe({
-      next: (page) => {
-        this.supplies.set(page.content);
-        this.totalElements.set(page.totalElements);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.error.set('No fue posible cargar los insumos.');
-        this.loading.set(false);
-      },
-    });
+    this.supplyService
+      .getSupplies({
+        page: this.pageIndex(),
+        size: this.pageSize(),
+        sort: this.sortParam(),
+      })
+      .subscribe({
+        next: (page) => {
+          this.supplies.set(page.content);
+          this.totalElements.set(page.totalElements);
+          this.loading.set(false);
+        },
+        error: () => {
+          this.error.set('No fue posible cargar los insumos.');
+          this.loading.set(false);
+        },
+      });
   }
 
   protected sortSupplies(sort: Sort) {

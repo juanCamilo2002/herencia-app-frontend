@@ -1,0 +1,6 @@
+<span class="status-badge" [class]="'status-badge--' + size() + ' status-badge--' + tone()">
+  @if (icon()) {
+    <mat-icon aria-hidden="true">{{ icon() }}</mat-icon>
+  }
+  <span class="status-badge__label">{{ label() }}</span>
+</span>

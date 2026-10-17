@@ -9,6 +9,7 @@ import { MatTableModule } from '@angular/material/table';
 import { AuthSessionService } from '../../core/auth/auth-session.service';
 import { ConfirmDialog } from '../../shared/components/confirm-dialog/confirm-dialog';
 import { MetricCard } from '../../shared/components/metric-card/metric-card';
+import { StatusBadge } from '../../shared/components/status-badge/status-badge';
 import { ToastService } from '../../shared/services/toast.service';
 import { UserService } from './data-access/user.service';
 import { UserFormDialog } from './user-form-dialog/user-form-dialog';
@@ -24,7 +25,8 @@ import { PageEvent, MatPaginatorModule } from '@angular/material/paginator';
     MatSortModule,
     MatTableModule,
     MetricCard,
-    MatPaginatorModule
+    StatusBadge,
+    MatPaginatorModule,
   ],
   selector: 'app-users',
   styleUrl: './users.scss',
@@ -46,23 +48,19 @@ export class Users implements OnInit {
   protected readonly pageSize = signal(20);
   protected readonly totalElements = signal(0);
 
-  protected readonly canCreateUser = computed(() =>
-    this.session.hasPermission('users:create') &&
-    this.session.hasPermission('users:assign-role')
+  protected readonly canCreateUser = computed(
+    () =>
+      this.session.hasPermission('users:create') && this.session.hasPermission('users:assign-role'),
   );
 
-  protected readonly canUpdateUser = computed(() =>
-    this.session.hasPermission('users:update') &&
-    this.session.hasPermission('users:assign-role')
+  protected readonly canUpdateUser = computed(
+    () =>
+      this.session.hasPermission('users:update') && this.session.hasPermission('users:assign-role'),
   );
 
-  protected readonly canDisableUser = computed(() =>
-    this.session.hasPermission('users:disable')
-  );
+  protected readonly canDisableUser = computed(() => this.session.hasPermission('users:disable'));
 
-  protected readonly hasUserActions = computed(() =>
-    this.canUpdateUser() || this.canDisableUser()
-  );
+  protected readonly hasUserActions = computed(() => this.canUpdateUser() || this.canDisableUser());
 
   protected readonly displayedColumns = computed(() => [
     'user',
@@ -89,21 +87,23 @@ export class Users implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    this.userService.getUsers({
-      page: this.pageIndex(),
-      size: this.pageSize(),
-      sort: this.sortParam()
-    }).subscribe({
-      next: (page) => {
-        this.users.set(page.content);
-        this.totalElements.set(page.totalElements);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.error.set('No fue posible cargar los usuarios.');
-        this.loading.set(false);
-      },
-    });
+    this.userService
+      .getUsers({
+        page: this.pageIndex(),
+        size: this.pageSize(),
+        sort: this.sortParam(),
+      })
+      .subscribe({
+        next: (page) => {
+          this.users.set(page.content);
+          this.totalElements.set(page.totalElements);
+          this.loading.set(false);
+        },
+        error: () => {
+          this.error.set('No fue posible cargar los usuarios.');
+          this.loading.set(false);
+        },
+      });
   }
 
   private loadSummary() {
@@ -195,7 +195,6 @@ export class Users implements OnInit {
       },
     });
   }
-
 
   private sortParam() {
     const sort = this.sort();

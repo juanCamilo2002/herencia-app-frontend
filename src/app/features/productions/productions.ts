@@ -7,6 +7,7 @@ import { PageEvent, MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableModule } from '@angular/material/table';
 import { AuthSessionService } from '../../core/auth/auth-session.service';
 import { MetricCard } from '../../shared/components/metric-card/metric-card';
+import { StatusBadge } from '../../shared/components/status-badge/status-badge';
 import { ToastService } from '../../shared/services/toast.service';
 import {
   Production,
@@ -27,6 +28,7 @@ import { productionProcessLabel, productionStatusLabel } from './data-access/pro
     MatPaginatorModule,
     MatTableModule,
     MetricCard,
+    StatusBadge,
   ],
   selector: 'app-productions',
   styleUrl: './productions.scss',
@@ -66,10 +68,11 @@ export class Productions implements OnInit {
   protected readonly consumedSupplies = computed(() => this.summary()?.consumedSupplies ?? 0);
   protected readonly lostSupplies = computed(() => this.summary()?.lostSupplies ?? 0);
 
-  protected readonly canCreateProduction = computed(() =>
-    this.session.hasPermission('productions:create') &&
-    this.session.hasPermission('products:read') &&
-    this.session.hasPermission('supplies:read')
+  protected readonly canCreateProduction = computed(
+    () =>
+      this.session.hasPermission('productions:create') &&
+      this.session.hasPermission('products:read') &&
+      this.session.hasPermission('supplies:read'),
   );
 
   ngOnInit(): void {
@@ -121,11 +124,8 @@ export class Productions implements OnInit {
     });
   }
 
-
   protected outputsSummary(production: Production) {
-    return production.outputs
-      .map((item) => `${item.quantity} x ${item.productName}`)
-      .join(', ');
+    return production.outputs.map((item) => `${item.quantity} x ${item.productName}`).join(', ');
   }
 
   protected consumedItems(production: Production) {
@@ -141,31 +141,30 @@ export class Productions implements OnInit {
       return 'Sin registros';
     }
 
-    return items
-      .map((item) => `${item.quantity} x ${item.supplyName}`)
-      .join(', ');
+    return items.map((item) => `${item.quantity} x ${item.supplyName}`).join(', ');
   }
-
 
   private loadProductions() {
     this.loading.set(true);
     this.error.set(null);
 
-    this.productionService.getProductions({
-      page: this.pageIndex(),
-      size: this.pageSize(),
-      sort: 'productionDateTime,desc',
-    }).subscribe({
-      next: (page) => {
-        this.productions.set(page.content);
-        this.totalElements.set(page.totalElements);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.error.set('No fue posible cargar las producciones.');
-        this.loading.set(false);
-      },
-    });
+    this.productionService
+      .getProductions({
+        page: this.pageIndex(),
+        size: this.pageSize(),
+        sort: 'productionDateTime,desc',
+      })
+      .subscribe({
+        next: (page) => {
+          this.productions.set(page.content);
+          this.totalElements.set(page.totalElements);
+          this.loading.set(false);
+        },
+        error: () => {
+          this.error.set('No fue posible cargar las producciones.');
+          this.loading.set(false);
+        },
+      });
   }
 
   private loadSummary() {

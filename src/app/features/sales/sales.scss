@@ -2,38 +2,135 @@
   display: block;
 }
 
-.sale-card__total {
-  margin-top: 18px;
-  color: var(--color-text);
-  font-size: 24px;
-  font-weight: 780;
-  letter-spacing: -0.04em;
+.sales-metrics {
+  container: sales-metrics / inline-size;
+  display: grid;
+  gap: 24px;
+  min-width: 0;
 }
 
-.sale-card__actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 0 0 auto;
+.sales-metrics__heading {
+  margin: 0 0 12px;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 650;
 }
 
-.sales-table table {
-  min-width: 1180px;
+.sales-metrics__grid {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+}
+
+@container sales-metrics (min-width: 34rem) {
+  .sales-metrics__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container sales-metrics (min-width: 64rem) {
+  .sales-metrics__grid--financial {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .sales-metrics__grid--activity {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .sales-table .mat-column-sale {
-  width: 200px;
-  min-width: 200px;
+  min-width: 175px;
 }
 
 .sales-table .mat-column-actions {
   width: 56px;
-  min-width: 56px;
 }
 
-@media (max-width: 720px) {
-  .sale-card__actions {
-    width: 100%;
-    justify-content: space-between;
+.sales-table__customer {
+  max-width: 240px;
+  overflow-wrap: anywhere;
+}
+
+.sales-table .sales-list__money {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.sales-table .sales-list__balance--pending,
+.sales-list__balance--pending {
+  color: var(--color-primary);
+  font-weight: 750;
+}
+
+.sales-table .sales-list__balance--paid,
+.sales-list__balance--paid {
+  color: var(--color-muted);
+}
+
+.sales-list__message {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  min-height: 180px;
+  color: var(--color-muted);
+}
+
+.sales-list__date {
+  display: block;
+  margin-top: 6px;
+  color: var(--color-muted);
+  font-size: 12px;
+}
+
+.sales-mobile__customer {
+  overflow-wrap: anywhere;
+}
+
+.sales-mobile__status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.sales-mobile__amounts {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.sales-mobile__amounts > div {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sales-mobile dt {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+
+.sales-mobile dd {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.sales-list__visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .sales-mobile .data-card__header {
+    flex-direction: row;
   }
 }

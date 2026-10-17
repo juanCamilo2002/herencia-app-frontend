@@ -7,11 +7,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { AuthSessionService } from '../../core/auth/auth-session.service';
 import { MetricCard } from '../../shared/components/metric-card/metric-card';
+import { StatusBadge } from '../../shared/components/status-badge/status-badge';
 import { ToastService } from '../../shared/services/toast.service';
-import {
-  SupplyInventorySummary,
-  SupplyMovement,
-} from './data-access/supply-inventory.model';
+import { SupplyInventorySummary, SupplyMovement } from './data-access/supply-inventory.model';
 import { SupplyInventoryService } from './data-access/supply-inventory.service';
 import { SupplyMovementDialog } from './supply-movement-dialog/supply-movement-dialog';
 import { supplyUnitLabel } from '../supplies/data-access/supply-labels';
@@ -31,6 +29,7 @@ import {
     MatPaginatorModule,
     MatTableModule,
     MetricCard,
+    StatusBadge,
   ],
   selector: 'app-supply-inventory',
   styleUrl: './supply-inventory.scss',
@@ -73,9 +72,10 @@ export class SupplyInventory implements OnInit {
   protected readonly adjustmentMovements = computed(() => this.summary()?.adjustmentMovements ?? 0);
   protected readonly lossMovements = computed(() => this.summary()?.lossMovements ?? 0);
 
-  protected readonly canCreateMovement = computed(() =>
-    this.session.hasPermission('supply-inventory:create') &&
-    this.session.hasPermission('supplies:read')
+  protected readonly canCreateMovement = computed(
+    () =>
+      this.session.hasPermission('supply-inventory:create') &&
+      this.session.hasPermission('supplies:read'),
   );
 
   ngOnInit(): void {
@@ -117,21 +117,23 @@ export class SupplyInventory implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    this.supplyInventoryService.getMovements({
-      page: this.pageIndex(),
-      size: this.pageSize(),
-      sort: 'movementDateTime,desc',
-    }).subscribe({
-      next: (page) => {
-        this.movements.set(page.content);
-        this.totalElements.set(page.totalElements);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.error.set('No fue posible cargar los movimientos de insumos.');
-        this.loading.set(false);
-      },
-    });
+    this.supplyInventoryService
+      .getMovements({
+        page: this.pageIndex(),
+        size: this.pageSize(),
+        sort: 'movementDateTime,desc',
+      })
+      .subscribe({
+        next: (page) => {
+          this.movements.set(page.content);
+          this.totalElements.set(page.totalElements);
+          this.loading.set(false);
+        },
+        error: () => {
+          this.error.set('No fue posible cargar los movimientos de insumos.');
+          this.loading.set(false);
+        },
+      });
   }
 
   private loadSummary() {

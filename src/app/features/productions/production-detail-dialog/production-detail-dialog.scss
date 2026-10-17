@@ -74,18 +74,6 @@
   gap: 6px;
 }
 
-.production-detail__tags span {
-  display: inline-flex;
-  min-height: 26px;
-  align-items: center;
-  padding: 0 9px;
-  border-radius: 999px;
-  background: rgba(37, 99, 235, 0.08);
-  color: var(--color-primary);
-  font-size: 12px;
-  font-weight: 700;
-}
-
 .production-detail__list {
   display: grid;
   gap: 8px;

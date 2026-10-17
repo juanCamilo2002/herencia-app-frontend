@@ -1,4 +1,5 @@
 import { StockMovementSourceType, StockMovementType } from './inventory.model';
+import type { StatusBadgeTone } from '../../../shared/components/status-badge/status-badge';
 
 export function stockMovementLabel(type: StockMovementType) {
   switch (type) {
@@ -26,16 +27,16 @@ export function stockMovementIcon(type: StockMovementType) {
   }
 }
 
-export function stockMovementTone(type: StockMovementType) {
+export function stockMovementTone(type: StockMovementType): StatusBadgeTone {
   switch (type) {
     case 'INBOUND':
-      return 'movement-badge--success';
+      return 'success';
     case 'OUTBOUND':
-      return 'movement-badge--warning';
+      return 'warning';
     case 'ADJUSTMENT':
-      return 'movement-badge--info';
+      return 'primary';
     case 'LOSS':
-      return 'movement-badge--loss';
+      return 'danger';
   }
 }
 
