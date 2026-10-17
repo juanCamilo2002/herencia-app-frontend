@@ -1,0 +1,105 @@
+:host {
+  container-type: inline-size;
+  display: block;
+}
+
+.receivables__section-title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.receivables__description {
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.receivables__metrics {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 16px;
+}
+
+.receivables__filters {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.receivables__filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  grid-column: 1 / -1;
+}
+
+.receivables__message {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  min-height: 180px;
+  color: var(--color-muted);
+}
+
+.receivables__customer {
+  max-width: 240px;
+  overflow-wrap: anywhere;
+}
+
+.receivables-table .receivables__money {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.receivables-table .receivables__overdue,
+.receivables__overdue {
+  color: var(--color-danger);
+  font-weight: 700;
+}
+
+.receivables__mobile-amounts {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.receivables__mobile-amounts > div {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.receivables__mobile-amounts dt {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+
+.receivables__mobile-amounts dd {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+@container (min-width: 50rem) {
+  .receivables__filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@container (min-width: 64rem) {
+  .receivables__metrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 34rem) {
+  .receivables__metrics {
+    grid-template-columns: 1fr;
+  }
+}

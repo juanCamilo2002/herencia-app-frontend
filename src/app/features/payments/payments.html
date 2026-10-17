@@ -1,0 +1,255 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <span class="page__eyebrow">Comercial</span>
+      <h1 class="page__title">Pagos</h1>
+      <p class="page__subtitle">Consulta y gestiona los pagos de todas las ventas.</p>
+    </div>
+  </header>
+
+  <section class="data-panel" aria-labelledby="payments-title" [attr.aria-busy]="loading()">
+    <div class="data-panel__header">
+      <div class="data-panel__title-group">
+        <span class="data-panel__icon"><mat-icon>payments</mat-icon></span>
+        <div>
+          <h2 id="payments-title">Historial de pagos</h2>
+          <p>
+            Ordenado por fecha real del pago. Abre un pago para consultar sus datos y las acciones
+            disponibles.
+          </p>
+          @if (!loading() && !error()) {
+            <p>{{ totalElements() }} pago(s) encontrados.</p>
+          }
+        </div>
+      </div>
+    </div>
+
+    <form class="payments__filters" [formGroup]="filtersForm" (ngSubmit)="applyFilters()">
+      <mat-form-field appearance="outline">
+        <mat-label>Nombre del cliente</mat-label>
+        <input matInput formControlName="customerName" maxlength="160" autocomplete="off" />
+        @if (
+          filtersForm.controls.customerName.touched && filtersForm.controls.customerName.invalid
+        ) {
+          <mat-error>Máximo 160 caracteres.</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Estado del pago</mat-label>
+        <mat-select formControlName="paymentStatus">
+          <mat-option [value]="null">Todos</mat-option>
+          <mat-option value="REGISTERED">Registrado</mat-option>
+          <mat-option value="CONFIRM">Confirmado</mat-option>
+          <mat-option value="DECLINE">Rechazado</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Método de pago</mat-label>
+        <mat-select formControlName="paymentMethod">
+          <mat-option [value]="null">Todos</mat-option>
+          @for (method of methods; track method.value) {
+            <mat-option [value]="method.value">{{ method.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Fecha del pago desde</mat-label>
+        <input matInput type="date" formControlName="dateFrom" />
+        @if (filtersForm.controls.dateFrom.touched && filtersForm.controls.dateFrom.invalid) {
+          <mat-error>Selecciona una fecha válida.</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Fecha del pago hasta</mat-label>
+        <input matInput type="date" formControlName="dateTo" />
+        <mat-hint>Incluye todo el día seleccionado.</mat-hint>
+        @if (filtersForm.controls.dateTo.touched && filtersForm.controls.dateTo.invalid) {
+          <mat-error>Selecciona una fecha válida.</mat-error>
+        }
+      </mat-form-field>
+      <mat-checkbox formControlName="includeDeleted">Incluir pagos eliminados</mat-checkbox>
+      @if (filtersForm.hasError('dateRange')) {
+        <p class="payments__filter-error" role="alert">
+          La fecha desde no puede ser posterior a la fecha hasta.
+        </p>
+      }
+      <div class="payments__filter-actions">
+        <button mat-button type="button" (click)="clearFilters()">Limpiar</button>
+        <button mat-flat-button type="submit"><mat-icon>filter_alt</mat-icon>Aplicar</button>
+      </div>
+    </form>
+
+    @if (loading()) {
+      <p class="payments__message" role="status">Cargando pagos...</p>
+    } @else if (error()) {
+      <div class="payments__message" role="alert">
+        <p>{{ error() }}</p>
+        <button mat-button type="button" (click)="loadRows()">Reintentar pagos</button>
+      </div>
+    } @else if (rows().length === 0) {
+      <div class="empty-state">
+        <span class="empty-state__icon"><mat-icon>payments</mat-icon></span>
+        <h3>
+          {{ hasActiveFilters() ? 'No hay pagos para estos filtros' : 'No hay pagos registrados' }}
+        </h3>
+        <p>
+          {{
+            hasActiveFilters()
+              ? 'Prueba con otro cliente, estado, método o rango de fechas.'
+              : 'Los pagos registrados desde las ventas aparecerán aquí.'
+          }}
+        </p>
+      </div>
+    } @else {
+      <div class="data-table payments-table">
+        <table mat-table [dataSource]="rows()" aria-label="Listado global de pagos">
+          <ng-container matColumnDef="payment">
+            <th mat-header-cell *matHeaderCellDef>Pago / fecha real</th>
+            <td mat-cell *matCellDef="let row">
+              <strong>#{{ code(row.id) }}</strong
+              ><small>{{ row.paymentDateTime | date: 'dd/MM/yyyy · HH:mm' }}</small>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="customer">
+            <th mat-header-cell *matHeaderCellDef>Cliente</th>
+            <td mat-cell *matCellDef="let row" class="payments__customer">
+              {{ row.customerName || 'Cliente general' }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="sale">
+            <th mat-header-cell *matHeaderCellDef>Venta</th>
+            <td mat-cell *matCellDef="let row">#{{ code(row.saleId) }}</td>
+          </ng-container>
+          <ng-container matColumnDef="amount">
+            <th mat-header-cell *matHeaderCellDef class="payments__money">Importe</th>
+            <td mat-cell *matCellDef="let row" class="payments__money">
+              <strong>{{ row.amount | currency: 'COP' : 'symbol-narrow' : '1.2-2' }}</strong>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="method">
+            <th mat-header-cell *matHeaderCellDef>Método</th>
+            <td mat-cell *matCellDef="let row">{{ methodLabel(row.method) }}</td>
+          </ng-container>
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Estado</th>
+            <td mat-cell *matCellDef="let row">
+              <div class="payments__badges">
+                <app-status-badge
+                  [label]="statusLabel(row.status)"
+                  [tone]="statusTone(row.status)"
+                  size="small"
+                />
+                @if (row.deletedAt) {
+                  <app-status-badge label="Eliminado" tone="danger" size="small" />
+                }
+              </div>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Acciones</th>
+            <td mat-cell *matCellDef="let row">
+              <div class="payments__row-actions">
+                <button
+                  mat-icon-button
+                  type="button"
+                  [attr.aria-label]="'Ver pago ' + code(row.id)"
+                  matTooltip="Ver y gestionar pago"
+                  (click)="openPayment(row)"
+                >
+                  <mat-icon>visibility</mat-icon>
+                </button>
+                @if (canOpenSale()) {
+                  <button
+                    mat-icon-button
+                    type="button"
+                    [attr.aria-label]="'Ver venta ' + code(row.saleId)"
+                    matTooltip="Ver venta relacionada"
+                    [disabled]="openingSaleId() !== null"
+                    (click)="openSale(row)"
+                  >
+                    <mat-icon>{{
+                      openingSaleId() === row.saleId ? 'hourglass_empty' : 'receipt_long'
+                    }}</mat-icon>
+                  </button>
+                }
+              </div>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </div>
+
+      <div class="data-mobile-list">
+        @for (row of rows(); track row.id) {
+          <article class="data-card">
+            <div class="data-card__header">
+              <div>
+                <strong>Pago #{{ code(row.id) }}</strong>
+                <p class="payments__description">
+                  {{ row.paymentDateTime | date: 'dd/MM/yyyy HH:mm' }}
+                </p>
+              </div>
+              <div class="payments__badges">
+                <app-status-badge
+                  [label]="statusLabel(row.status)"
+                  [tone]="statusTone(row.status)"
+                />
+                @if (row.deletedAt) {
+                  <app-status-badge label="Eliminado" tone="danger" />
+                }
+              </div>
+            </div>
+            <p class="payments__customer">{{ row.customerName || 'Cliente general' }}</p>
+            <dl class="payments__mobile-data">
+              <div>
+                <dt>Importe</dt>
+                <dd>{{ row.amount | currency: 'COP' : 'symbol-narrow' : '1.2-2' }}</dd>
+              </div>
+              <div>
+                <dt>Método</dt>
+                <dd>{{ methodLabel(row.method) }}</dd>
+              </div>
+              <div>
+                <dt>Venta</dt>
+                <dd>#{{ code(row.saleId) }}</dd>
+              </div>
+              <div>
+                <dt>Registrado por</dt>
+                <dd>{{ row.registeredByName }}</dd>
+              </div>
+            </dl>
+            <div class="payments__row-actions">
+              <button mat-button type="button" (click)="openPayment(row)">
+                Ver y gestionar pago
+              </button>
+              @if (canOpenSale()) {
+                <button
+                  mat-button
+                  type="button"
+                  [disabled]="openingSaleId() !== null"
+                  (click)="openSale(row)"
+                >
+                  Ver venta
+                </button>
+              }
+            </div>
+          </article>
+        }
+      </div>
+    }
+
+    @if (totalElements() > 0) {
+      <mat-paginator
+        [length]="totalElements()"
+        [pageIndex]="pageIndex()"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="[10, 20, 50, 100]"
+        [disabled]="loading() || !!error()"
+        showFirstLastButtons
+        aria-label="Paginación de pagos"
+        (page)="pageChanged($event)"
+      />
+    }
+  </section>
+</section>

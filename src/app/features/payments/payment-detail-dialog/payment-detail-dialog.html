@@ -1,0 +1,287 @@
+<section class="app-form-dialog payment-detail">
+  <header class="app-form-dialog__header">
+    <div>
+      <span>Pagos</span>
+      <h2>Detalle de pago</h2>
+
+      <p>
+        #{{ data.paymentId.slice(0, 8).toUpperCase() }}
+        @if (data.customerName) {
+          · {{ data.customerName }}
+        }
+      </p>
+    </div>
+
+    <button
+      mat-icon-button
+      type="button"
+      aria-label="Cerrar detalle de pago"
+      [disabled]="saving()"
+      (click)="close()"
+    >
+      <mat-icon>close</mat-icon>
+    </button>
+  </header>
+
+  <div class="payment-detail__body">
+    @if (loading()) {
+      <p class="payment-detail__muted" role="status">Cargando pago...</p>
+    } @else if (loadError()) {
+      <div class="app-form-dialog__error" role="alert">
+        <p>{{ loadError() }}</p>
+
+        <button mat-button type="button" (click)="load()">Reintentar</button>
+      </div>
+    } @else if (payment(); as current) {
+      <section class="payment-detail__summary">
+        <strong class="payment-detail__amount">
+          {{ current.amount | currency: 'COP' : 'symbol-narrow' : '1.2-2' }}
+        </strong>
+
+        <div class="payment-detail__badges">
+          <app-status-badge
+            [label]="statusLabel(current.status)"
+            [tone]="statusTone(current.status)"
+          />
+
+          @if (current.deletedAt) {
+            <app-status-badge label="Eliminado" tone="danger" />
+          }
+        </div>
+      </section>
+
+      <dl class="payment-detail__metadata">
+        <div>
+          <dt>Método de pago</dt>
+          <dd>{{ methodLabel(current.method) }}</dd>
+        </div>
+
+        <div>
+          <dt>Fecha y hora real</dt>
+          <dd>{{ current.paymentDateTime | date: 'dd/MM/yyyy HH:mm:ss' }}</dd>
+        </div>
+
+        <div>
+          <dt>Venta relacionada</dt>
+          <dd>#{{ current.saleId.slice(0, 8).toUpperCase() }}</dd>
+        </div>
+
+        <div>
+          <dt>Registrado por</dt>
+          <dd>{{ current.registeredByName }}</dd>
+        </div>
+
+        <div>
+          <dt>Fecha de registro</dt>
+          <dd>{{ current.createdAt | date: 'dd/MM/yyyy HH:mm:ss' }}</dd>
+        </div>
+
+        <div>
+          <dt>Última actualización</dt>
+          <dd>{{ current.updatedAt | date: 'dd/MM/yyyy HH:mm:ss' }}</dd>
+        </div>
+      </dl>
+
+      @if (current.notes) {
+        <section class="payment-detail__section">
+          <h3>Observaciones</h3>
+          <p class="payment-detail__comment">{{ current.notes }}</p>
+        </section>
+      }
+
+      @if (current.confirmedAt) {
+        <section class="payment-detail__section">
+          <h3>Confirmación</h3>
+          <p>
+            {{ current.confirmedByName }} ·
+            {{ current.confirmedAt | date: 'dd/MM/yyyy HH:mm:ss' }}
+          </p>
+        </section>
+      }
+
+      @if (current.declinedAt) {
+        <section class="payment-detail__section">
+          <h3>Rechazo</h3>
+          <p>
+            {{ current.declinedByName }} ·
+            {{ current.declinedAt | date: 'dd/MM/yyyy HH:mm:ss' }}
+          </p>
+          <p class="payment-detail__comment">{{ current.declineReason }}</p>
+        </section>
+      }
+
+      @if (current.deletedAt) {
+        <section class="payment-detail__section">
+          <h3>Eliminación</h3>
+          <p>
+            {{ current.deletedByName }} ·
+            {{ current.deletedAt | date: 'dd/MM/yyyy HH:mm:ss' }}
+          </p>
+          <p class="payment-detail__comment">{{ current.deletionReason }}</p>
+
+          <p class="payment-detail__muted">
+            Se conserva el estado original para trazabilidad. Este pago no cuenta como recaudado.
+          </p>
+        </section>
+      }
+
+      @if (!action()) {
+        <div class="payment-detail__actions">
+          <button mat-button type="button" [disabled]="saving()" (click)="load()">
+            Actualizar
+          </button>
+
+          @if (canAct('update')) {
+            <button mat-button type="button" (click)="openAction('update')">Editar</button>
+          }
+
+          @if (canAct('confirm')) {
+            <button mat-button type="button" (click)="openAction('confirm')">Confirmar</button>
+          }
+
+          @if (canAct('decline')) {
+            <button mat-button type="button" (click)="openAction('decline')">Rechazar</button>
+          }
+
+          @if (canAct('delete')) {
+            <button mat-button type="button" (click)="openAction('delete')">Eliminar</button>
+          }
+        </div>
+      }
+
+      @if (action(); as currentAction) {
+        <form
+          #actionEditor
+          class="payment-detail__editor"
+          [formGroup]="paymentForm"
+          (ngSubmit)="submitAction()"
+        >
+          <h3>{{ actionTitles[currentAction] }}</h3>
+
+          @if (actionError()) {
+            <p class="app-form-dialog__error" role="alert">
+              {{ actionError() }}
+            </p>
+          }
+
+          @if (currentAction === 'update') {
+            <div class="payment-detail__fields">
+              <mat-form-field appearance="outline">
+                <mat-label>Importe</mat-label>
+                <input
+                  matInput
+                  type="number"
+                  min="0.01"
+                  max="9999999999.99"
+                  step="0.01"
+                  formControlName="amount"
+                />
+
+                @if (paymentForm.controls.amount.touched && paymentForm.controls.amount.invalid) {
+                  <mat-error>
+                    Importe positivo, máximo dos decimales y hasta 9.999.999.999,99.
+                  </mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Método de pago</mat-label>
+                <mat-select formControlName="method">
+                  @for (method of methods; track method.value) {
+                    <mat-option [value]="method.value">
+                      {{ method.label }}
+                    </mat-option>
+                  }
+                </mat-select>
+
+                @if (paymentForm.controls.method.touched && paymentForm.controls.method.invalid) {
+                  <mat-error>Selecciona el método de pago.</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Fecha y hora real</mat-label>
+                <input
+                  matInput
+                  type="datetime-local"
+                  step="any"
+                  formControlName="paymentDateTime"
+                />
+
+                @if (
+                  paymentForm.controls.paymentDateTime.touched &&
+                  paymentForm.controls.paymentDateTime.invalid
+                ) {
+                  <mat-error>La fecha y hora son obligatorias.</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Observaciones</mat-label>
+                <textarea matInput rows="3" maxlength="1000" formControlName="notes"></textarea>
+
+                @if (paymentForm.controls.notes.touched && paymentForm.controls.notes.invalid) {
+                  <mat-error>Máximo 1000 caracteres.</mat-error>
+                }
+              </mat-form-field>
+            </div>
+          } @else {
+            @if (currentAction === 'confirm') {
+              <p>Confirmarás un pago por este importe:</p>
+              <strong>{{ current.amount | currency: 'COP' : 'symbol-narrow' : '1.2-2' }}</strong>
+
+              <p class="payment-detail__muted">
+                El backend comprobará el saldo y distribuirá el importe entre las cuotas pendientes.
+                Después no podrá editarse ni rechazarse.
+              </p>
+            }
+
+            @if (currentAction === 'decline') {
+              <p class="payment-detail__muted">
+                El pago quedará rechazado y no modificará la deuda.
+              </p>
+            }
+
+            @if (currentAction === 'delete') {
+              @if (current.status === 'CONFIRM') {
+                <p class="payment-detail__muted">
+                  Se revertirán las aplicaciones de este pago y su importe volverá al saldo de las
+                  cuotas originales.
+                </p>
+              } @else {
+                <p class="payment-detail__muted">
+                  Se eliminará de los pagos activos sin modificar la deuda.
+                </p>
+              }
+
+              <p class="payment-detail__muted">
+                El registro y el motivo se conservarán para trazabilidad.
+              </p>
+            }
+
+            @if (currentAction === 'decline' || currentAction === 'delete') {
+              <mat-form-field appearance="outline">
+                <mat-label>Motivo obligatorio</mat-label>
+                <textarea matInput rows="3" maxlength="1000" [formControl]="reason"></textarea>
+
+                @if (reason.touched && reason.invalid) {
+                  <mat-error>Escribe un motivo de máximo 1000 caracteres.</mat-error>
+                }
+              </mat-form-field>
+            }
+          }
+
+          <div class="payment-detail__actions">
+            <button mat-button type="button" [disabled]="saving()" (click)="cancelAction()">
+              Cancelar
+            </button>
+
+            <button mat-flat-button type="submit" [disabled]="saving()">
+              {{ saving() ? 'Guardando...' : actionTitles[currentAction] }}
+            </button>
+          </div>
+        </form>
+      }
+    }
+  </div>
+</section>

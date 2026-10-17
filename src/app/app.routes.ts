@@ -59,6 +59,19 @@ export const routes: Routes = [
         loadComponent: () => import('./features/sales/sales').then((m) => m.Sales),
       },
       {
+        path: 'receivables',
+        canActivate: [permissionGuard],
+        data: { permission: 'receivables:read' },
+        loadComponent: () =>
+          import('./features/receivables/receivables').then((module) => module.Receivables),
+      },
+      {
+        path: 'payments',
+        canActivate: [permissionGuard],
+        data: { permission: 'payments:read' },
+        loadComponent: () => import('./features/payments/payments').then((m) => m.Payments),
+      },
+      {
         path: 'employees',
         canActivate: [permissionGuard],
         data: { permission: 'employees:read' },
@@ -86,13 +99,15 @@ export const routes: Routes = [
         path: 'supply-inventory',
         canActivate: [permissionGuard],
         data: { permission: 'supply-inventory:read' },
-        loadComponent: () => import('./features/supply-inventory/supply-inventory').then((m) => m.SupplyInventory),
+        loadComponent: () =>
+          import('./features/supply-inventory/supply-inventory').then((m) => m.SupplyInventory),
       },
       {
         path: 'productions',
         canActivate: [permissionGuard],
         data: { permission: 'productions:read' },
-        loadComponent: () => import('./features/productions/productions').then((m) => m.Productions),
+        loadComponent: () =>
+          import('./features/productions/productions').then((m) => m.Productions),
       },
     ],
   },

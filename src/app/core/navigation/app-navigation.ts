@@ -30,8 +30,34 @@ export const APP_NAVIGATION_ENTRIES: AppNavigationEntry[] = [
     label: 'Comercial',
     icon: 'storefront',
     items: [
-      { type: 'item', label: 'Clientes', icon: 'groups', route: '/customers', permission: 'customers:read' },
-      { type: 'item', label: 'Ventas', icon: 'point_of_sale', route: '/sales', permission: 'sales:read' },
+      {
+        type: 'item',
+        label: 'Clientes',
+        icon: 'groups',
+        route: '/customers',
+        permission: 'customers:read',
+      },
+      {
+        type: 'item',
+        label: 'Ventas',
+        icon: 'point_of_sale',
+        route: '/sales',
+        permission: 'sales:read',
+      },
+      {
+        type: 'item',
+        label: 'Cartera',
+        icon: 'account_balance_wallet',
+        route: '/receivables',
+        permission: 'receivables:read',
+      },
+      {
+        type: 'item',
+        label: 'Pagos',
+        icon: 'payments',
+        route: '/payments',
+        permission: 'payments:read',
+      },
     ],
   },
   {
@@ -40,11 +66,41 @@ export const APP_NAVIGATION_ENTRIES: AppNavigationEntry[] = [
     label: 'Operación',
     icon: 'inventory_2',
     items: [
-      { type: 'item', label: 'Productos', icon: 'wine_bar', route: '/products', permission: 'products:read' },
-      { type: 'item', label: 'Inventario productos', icon: 'inventory_2', route: '/inventory', permission: 'inventory:read' },
-      { type: 'item', label: 'Insumos', icon: 'science', route: '/supplies', permission: 'supplies:read' },
-      { type: 'item', label: 'Inventario insumos', icon: 'warehouse', route: '/supply-inventory', permission: 'supply-inventory:read' },
-      { type: 'item', label: 'Producciones', icon: 'precision_manufacturing', route: '/productions', permission: 'productions:read' },
+      {
+        type: 'item',
+        label: 'Productos',
+        icon: 'wine_bar',
+        route: '/products',
+        permission: 'products:read',
+      },
+      {
+        type: 'item',
+        label: 'Inventario productos',
+        icon: 'inventory_2',
+        route: '/inventory',
+        permission: 'inventory:read',
+      },
+      {
+        type: 'item',
+        label: 'Insumos',
+        icon: 'science',
+        route: '/supplies',
+        permission: 'supplies:read',
+      },
+      {
+        type: 'item',
+        label: 'Inventario insumos',
+        icon: 'warehouse',
+        route: '/supply-inventory',
+        permission: 'supply-inventory:read',
+      },
+      {
+        type: 'item',
+        label: 'Producciones',
+        icon: 'precision_manufacturing',
+        route: '/productions',
+        permission: 'productions:read',
+      },
     ],
   },
   {
@@ -53,7 +109,13 @@ export const APP_NAVIGATION_ENTRIES: AppNavigationEntry[] = [
     label: 'Equipo',
     icon: 'badge',
     items: [
-      { type: 'item', label: 'Empleados', icon: 'badge', route: '/employees', permission: 'employees:read' },
+      {
+        type: 'item',
+        label: 'Empleados',
+        icon: 'badge',
+        route: '/employees',
+        permission: 'employees:read',
+      },
     ],
   },
   {
@@ -62,12 +124,24 @@ export const APP_NAVIGATION_ENTRIES: AppNavigationEntry[] = [
     label: 'Administración',
     icon: 'admin_panel_settings',
     items: [
-      { type: 'item', label: 'Usuarios', icon: 'manage_accounts', route: '/users', permission: 'users:read' },
-      { type: 'item', label: 'Roles', icon: 'admin_panel_settings', route: '/roles', permission: 'roles:read' },
+      {
+        type: 'item',
+        label: 'Usuarios',
+        icon: 'manage_accounts',
+        route: '/users',
+        permission: 'users:read',
+      },
+      {
+        type: 'item',
+        label: 'Roles',
+        icon: 'admin_panel_settings',
+        route: '/roles',
+        permission: 'roles:read',
+      },
     ],
-  }
+  },
 ];
 
 export const APP_NAVIGATION_ITEMS = APP_NAVIGATION_ENTRIES.flatMap((entry) =>
-  entry.type === 'item' ? [entry] : entry.items
+  entry.type === 'item' ? [entry] : entry.items,
 );

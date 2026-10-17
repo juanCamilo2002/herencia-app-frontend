@@ -1,0 +1,328 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <span class="page__eyebrow">Comercial</span>
+      <h1 class="page__title">Cartera</h1>
+      <p class="page__subtitle">
+        Consulta las ventas pendientes de pago y sus obligaciones vencidas.
+      </p>
+    </div>
+  </header>
+
+  @if (summary(); as data) {
+    <section aria-labelledby="receivables-summary-title">
+      <h2 id="receivables-summary-title" class="receivables__section-title">
+        Resumen global de cartera
+      </h2>
+
+      <p class="receivables__description">
+        Incluye toda la cartera. Los filtros solo afectan el listado.
+      </p>
+
+      <div class="data-stats receivables__metrics">
+        <app-metric-card
+          label="Total por cobrar"
+          [value]="(data.outstandingAmount | currency: 'COP' : 'symbol-narrow' : '1.2-2') ?? ''"
+          hint="Saldo de todas las ventas pendientes"
+          icon="account_balance_wallet"
+          tone="primary"
+        />
+
+        <app-metric-card
+          label="Total vencido"
+          [value]="(data.overdueAmount | currency: 'COP' : 'symbol-narrow' : '1.2-2') ?? ''"
+          hint="Saldo de cuotas en mora"
+          icon="event_busy"
+          tone="danger"
+        />
+
+        <app-metric-card
+          label="Ventas con saldo"
+          [value]="data.salesWithBalance"
+          hint="Contado y crédito"
+          icon="receipt_long"
+        />
+
+        <app-metric-card
+          label="Ventas en mora"
+          [value]="data.overdueSales"
+          hint="Con obligaciones vencidas pendientes"
+          icon="warning_amber"
+          tone="warning"
+        />
+      </div>
+    </section>
+  } @else if (summaryLoading()) {
+    <p class="data-panel__muted" role="status">Cargando resumen...</p>
+  }
+
+  @if (summaryError()) {
+    <div class="data-panel data-panel--error" role="alert">
+      <p>{{ summaryError() }}</p>
+
+      <button mat-button type="button" [disabled]="summaryLoading()" (click)="loadSummary()">
+        Reintentar resumen
+      </button>
+    </div>
+  }
+
+  <section class="data-panel" aria-labelledby="receivables-list-title" [attr.aria-busy]="loading()">
+    <div class="data-panel__header">
+      <div class="data-panel__title-group">
+        <span class="data-panel__icon">
+          <mat-icon>account_balance_wallet</mat-icon>
+        </span>
+
+        <div>
+          <h2 id="receivables-list-title">Obligaciones pendientes</h2>
+          <p>Una fila por venta con saldo, de la más reciente a la más antigua.</p>
+        </div>
+      </div>
+    </div>
+
+    <form class="receivables__filters" [formGroup]="filtersForm" (ngSubmit)="applyFilters()">
+      <mat-form-field appearance="outline">
+        <mat-label>Nombre del cliente</mat-label>
+        <input matInput formControlName="customerName" maxlength="160" autocomplete="off" />
+
+        @if (
+          filtersForm.controls.customerName.touched &&
+          filtersForm.controls.customerName.hasError('maxlength')
+        ) {
+          <mat-error>Máximo 160 caracteres.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Modalidad</mat-label>
+        <mat-select formControlName="paymentType">
+          <mat-option [value]="null">Todas</mat-option>
+          <mat-option value="CASH">Contado</mat-option>
+          <mat-option value="CREDIT">Crédito</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Estado de pago</mat-label>
+        <mat-select formControlName="paymentStatus">
+          <mat-option [value]="null">Todos</mat-option>
+          <mat-option value="PENDING">Pendiente</mat-option>
+          <mat-option value="PARTIAL">Parcial</mat-option>
+          <mat-option value="OVERDUE">En mora</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <div class="receivables__filter-actions">
+        <button mat-button type="button" (click)="clearFilters()">Limpiar</button>
+
+        <button mat-flat-button type="submit">
+          <mat-icon>filter_alt</mat-icon>
+          Aplicar
+        </button>
+      </div>
+    </form>
+
+    @if (!canOpenSale()) {
+      <p class="receivables__description">
+        Puedes consultar Cartera. Abrir el detalle completo requiere permiso de lectura de ventas.
+      </p>
+    }
+
+    @if (loading()) {
+      <p class="receivables__message" role="status">Cargando cartera...</p>
+    } @else if (error()) {
+      <div class="receivables__message" role="alert">
+        <p>{{ error() }}</p>
+        <button mat-button type="button" (click)="loadRows()">Reintentar cartera</button>
+      </div>
+    } @else if (rows().length === 0) {
+      <div class="empty-state">
+        <span class="empty-state__icon">
+          <mat-icon>account_balance_wallet</mat-icon>
+        </span>
+
+        <h3>
+          {{
+            hasActiveFilters()
+              ? 'No hay resultados para estos filtros'
+              : 'No hay ventas con saldo pendiente'
+          }}
+        </h3>
+
+        <p>
+          {{
+            hasActiveFilters()
+              ? 'Prueba con otro nombre, modalidad o estado.'
+              : 'Las ventas completamente pagadas no aparecen en Cartera.'
+          }}
+        </p>
+      </div>
+    } @else {
+      <div class="data-table receivables-table" [class.data-table--actions-end]="canOpenSale()">
+        <table mat-table [dataSource]="rows()" aria-label="Cartera por venta">
+          <ng-container matColumnDef="sale">
+            <th mat-header-cell *matHeaderCellDef>Venta</th>
+            <td mat-cell *matCellDef="let row">
+              <strong>#{{ saleCode(row) }}</strong>
+              <small>{{ row.saleDateTime | date: 'dd/MM/yyyy · HH:mm' }}</small>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="customer">
+            <th mat-header-cell *matHeaderCellDef>Cliente</th>
+            <td mat-cell *matCellDef="let row" class="receivables__customer">
+              {{ row.customerName || 'Cliente general' }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="paymentType">
+            <th mat-header-cell *matHeaderCellDef>Modalidad</th>
+            <td mat-cell *matCellDef="let row">
+              {{ typeLabel(row.paymentType) }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="balance">
+            <th mat-header-cell *matHeaderCellDef class="receivables__money">Saldo pendiente</th>
+            <td mat-cell *matCellDef="let row" class="receivables__money">
+              <strong>
+                {{ row.balanceAmount | currency: 'COP' : 'symbol-narrow' : '1.2-2' }}
+              </strong>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="overdue">
+            <th mat-header-cell *matHeaderCellDef class="receivables__money">Saldo vencido</th>
+            <td
+              mat-cell
+              *matCellDef="let row"
+              class="receivables__money"
+              [class.receivables__overdue]="row.overdueAmount > 0"
+            >
+              {{ row.overdueAmount | currency: 'COP' : 'symbol-narrow' : '1.2-2' }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="dueDate">
+            <th mat-header-cell *matHeaderCellDef>Vencimiento pendiente</th>
+            <td mat-cell *matCellDef="let row">
+              {{
+                row.oldestPendingDueDate
+                  ? (row.oldestPendingDueDate | date: 'dd/MM/yyyy')
+                  : 'Sin fecha'
+              }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="paymentStatus">
+            <th mat-header-cell *matHeaderCellDef>Estado</th>
+            <td mat-cell *matCellDef="let row">
+              <app-status-badge
+                [label]="financialLabel(row.paymentStatus)"
+                [tone]="financialTone(row.paymentStatus)"
+                size="small"
+              />
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Detalle</th>
+            <td mat-cell *matCellDef="let row">
+              <button
+                mat-icon-button
+                type="button"
+                [attr.aria-label]="'Ver detalle de venta ' + saleCode(row)"
+                [disabled]="openingSaleId() !== null"
+                matTooltip="Ver detalle de venta"
+                (click)="openSale(row)"
+              >
+                <mat-icon>
+                  {{ openingSaleId() === row.saleId ? 'hourglass_empty' : 'visibility' }}
+                </mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns()"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns()"></tr>
+        </table>
+      </div>
+
+      <div class="data-mobile-list">
+        @for (row of rows(); track row.saleId) {
+          <article class="data-card">
+            <div class="data-card__header">
+              <div>
+                <strong>#{{ saleCode(row) }}</strong>
+                <p class="receivables__description">
+                  {{ row.saleDateTime | date: 'dd/MM/yyyy HH:mm' }}
+                </p>
+              </div>
+
+              <app-status-badge
+                [label]="financialLabel(row.paymentStatus)"
+                [tone]="financialTone(row.paymentStatus)"
+              />
+            </div>
+
+            <p class="receivables__customer">
+              {{ row.customerName || 'Cliente general' }}
+              · {{ typeLabel(row.paymentType) }}
+            </p>
+
+            <dl class="receivables__mobile-amounts">
+              <div>
+                <dt>Saldo pendiente</dt>
+                <dd>
+                  {{ row.balanceAmount | currency: 'COP' : 'symbol-narrow' : '1.2-2' }}
+                </dd>
+              </div>
+
+              <div>
+                <dt>Saldo vencido</dt>
+                <dd [class.receivables__overdue]="row.overdueAmount > 0">
+                  {{ row.overdueAmount | currency: 'COP' : 'symbol-narrow' : '1.2-2' }}
+                </dd>
+              </div>
+
+              <div>
+                <dt>Vencimiento pendiente</dt>
+                <dd>
+                  {{
+                    row.oldestPendingDueDate
+                      ? (row.oldestPendingDueDate | date: 'dd/MM/yyyy')
+                      : 'Sin fecha'
+                  }}
+                </dd>
+              </div>
+            </dl>
+
+            @if (canOpenSale()) {
+              <button
+                mat-button
+                type="button"
+                [disabled]="openingSaleId() !== null"
+                (click)="openSale(row)"
+              >
+                {{ openingSaleId() === row.saleId ? 'Abriendo...' : 'Ver venta' }}
+              </button>
+            }
+          </article>
+        }
+      </div>
+    }
+
+    @if (totalElements() > 0) {
+      <mat-paginator
+        [length]="totalElements()"
+        [pageIndex]="pageIndex()"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="[10, 20, 50, 100]"
+        [disabled]="loading() || !!error()"
+        showFirstLastButtons
+        aria-label="Paginación de cartera"
+        (page)="pageChanged($event)"
+      />
+    }
+  </section>
+</section>
