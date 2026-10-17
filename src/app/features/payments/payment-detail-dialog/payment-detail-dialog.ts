@@ -33,6 +33,7 @@ import {
 import { PaymentMethod, SalePayment } from '../../sales/data-access/sales.model';
 import { SalesService } from '../../sales/data-access/sales.service';
 import { PaymentsService } from '../data-access/payments.service';
+import { PaymentAttachments } from '../payment-attachments/payment-attachments';
 
 type PaymentAction = 'update' | 'confirm' | 'decline' | 'delete';
 
@@ -54,6 +55,7 @@ export type PaymentDetailDialogData = {
     MatInputModule,
     MatSelectModule,
     StatusBadge,
+    PaymentAttachments,
   ],
   templateUrl: './payment-detail-dialog.html',
   styleUrl: './payment-detail-dialog.scss',
@@ -285,6 +287,13 @@ export class PaymentDetailDialog implements OnInit {
 
   public hasChanges() {
     return this.changed;
+  }
+
+  protected attachmentBusy(value: boolean) {
+    this.setSaving(value);
+  }
+  protected attachmentChanged() {
+    this.changed = true;
   }
 
   protected close() {

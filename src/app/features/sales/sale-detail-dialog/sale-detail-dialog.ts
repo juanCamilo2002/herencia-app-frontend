@@ -31,6 +31,7 @@ import {
 } from '../data-access/sales.model';
 import { SalesService } from '../data-access/sales.service';
 import { StatusBadge } from '../../../shared/components/status-badge/status-badge';
+import { PaymentAttachments } from '../../payments/payment-attachments/payment-attachments';
 import {
   financialStatusLabel,
   financialStatusTone,
@@ -58,6 +59,7 @@ type Action = 'create' | 'update' | 'confirm' | 'decline' | 'delete' | 'note';
     MatPaginatorModule,
     MatTabsModule,
     StatusBadge,
+    PaymentAttachments,
   ],
   selector: 'app-sale-detail-dialog',
   styleUrl: './sale-detail-dialog.scss',
@@ -75,6 +77,7 @@ export class SaleDetailDialog implements OnInit {
   private readonly actionEditor = viewChild<ElementRef<HTMLElement>>('actionEditor');
   private readonly paymentInspection = viewChild<ElementRef<HTMLElement>>('paymentInspection');
   private loadRequest?: Subscription;
+  private inspectionRequest?: Subscription;
   private changed = false;
 
   protected readonly sale = signal(this.initialSale);
@@ -309,7 +312,9 @@ export class SaleDetailDialog implements OnInit {
   }
 
   protected inspectPayment(paymentId: string) {
-    this.service
+    if (this.saving() || this.loading()) return;
+    this.inspectionRequest?.unsubscribe();
+    this.inspectionRequest = this.service
       .getPayment(this.initialSale.id, paymentId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -335,6 +340,7 @@ export class SaleDetailDialog implements OnInit {
     }
 
     this.selectedTab.set(index);
+    this.inspectionRequest?.unsubscribe();
     this.action.set(null);
     this.target.set(null);
     this.inspectedPayment.set(null);
@@ -343,6 +349,18 @@ export class SaleDetailDialog implements OnInit {
 
   public hasChanges() {
     return this.changed;
+  }
+
+  protected attachmentBusy(value: boolean) {
+    if (value) this.inspectionRequest?.unsubscribe();
+    this.saving.set(value);
+    this.dialogRef.disableClose = value;
+  }
+
+  protected attachmentChanged() {
+    this.changed = true;
+    this.historyPage.set(0);
+    this.load();
   }
 
   protected close() {

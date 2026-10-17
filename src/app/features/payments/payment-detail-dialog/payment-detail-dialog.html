@@ -126,6 +126,12 @@
       }
 
       @if (!action()) {
+        <app-payment-attachments
+          [payment]="current"
+          [disabled]="saving()"
+          (busyChange)="attachmentBusy($event)"
+          (changed)="attachmentChanged()"
+        />
         <div class="payment-detail__actions">
           <button mat-button type="button" [disabled]="saving()" (click)="load()">
             Actualizar

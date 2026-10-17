@@ -1,0 +1,197 @@
+<section class="attachments" aria-label="Soportes del pago" [attr.aria-busy]="loading() || busy()">
+  <div class="attachments__heading">
+    <div>
+      <h3>Soporte de pago</h3>
+      <p class="attachments__muted">Comprobante opcional. No modifica el saldo del pago.</p>
+    </div>
+    <button
+      mat-icon-button
+      type="button"
+      aria-label="Actualizar soportes"
+      title="Actualizar soportes"
+      [disabled]="busy() || disabled() || loading()"
+      (click)="load()"
+    >
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </div>
+
+  @if (error()) {
+    <div class="attachments__error" role="alert">
+      <mat-icon aria-hidden="true">error_outline</mat-icon><span>{{ error() }}</span>
+    </div>
+  }
+  @if (loading()) {
+    <p class="attachments__muted" role="status">Cargando soportes...</p>
+  }
+
+  @if (active(); as item) {
+    <article class="attachments__file attachments__file--active" aria-label="Soporte activo">
+      <div class="attachments__file-icon" aria-hidden="true">
+        <mat-icon>{{
+          item.contentType === 'application/pdf' ? 'picture_as_pdf' : 'image'
+        }}</mat-icon>
+      </div>
+      <div class="attachments__file-info">
+        <div class="attachments__filename">
+          <strong>{{ item.originalFilename }}</strong>
+          <app-status-badge label="Activo" tone="success" size="small" />
+        </div>
+        <p class="attachments__muted">
+          {{ item.contentType === 'application/pdf' ? 'PDF' : 'Imagen' }} ·
+          {{ formatSize(item.sizeBytes) }}
+        </p>
+        <p class="attachments__muted">
+          {{ item.uploadedByName }} · {{ item.uploadedAt | date: 'dd/MM/yyyy HH:mm' }}
+        </p>
+      </div>
+      <button
+        mat-stroked-button
+        type="button"
+        [disabled]="busy() || disabled()"
+        (click)="download(item)"
+      >
+        Descargar
+      </button>
+    </article>
+  } @else if (!loading()) {
+    <div class="attachments__empty">
+      <mat-icon aria-hidden="true">description</mat-icon>
+      <div>
+        <strong>Sin soporte activo</strong>
+        <p class="attachments__muted">
+          {{
+            canManage()
+              ? 'Adjunta el comprobante para conservarlo junto al pago.'
+              : 'Este pago no tiene un comprobante activo.'
+          }}
+        </p>
+      </div>
+    </div>
+  }
+
+  @if (canManage()) {
+    <fieldset class="attachments__upload" [disabled]="busy() || disabled() || loading()">
+      <legend>{{ active() ? 'Reemplazar comprobante' : 'Adjuntar comprobante' }}</legend>
+      <input
+        #fileInput
+        hidden
+        type="file"
+        accept=".pdf,.jpg,.jpeg,.png"
+        aria-label="Seleccionar soporte"
+        (change)="selectFile($event)"
+      />
+      <div class="attachments__picker" [class.attachments__picker--selected]="file()">
+        <mat-icon aria-hidden="true">{{ file() ? 'task_alt' : 'upload_file' }}</mat-icon>
+        <div class="attachments__file-info">
+          @if (file(); as selected) {
+            <strong>{{ selected.name }}</strong>
+            <p class="attachments__muted">{{ formatSize(selected.size) }} · Listo para guardar</p>
+          } @else {
+            <strong>Selecciona un archivo</strong>
+            <p class="attachments__muted">PDF, JPG o PNG · Máximo 5 MB</p>
+          }
+        </div>
+        <button
+          mat-stroked-button
+          type="button"
+          [disabled]="busy() || disabled() || loading()"
+          (click)="fileInput.click()"
+        >
+          {{ file() ? 'Cambiar archivo' : 'Elegir archivo' }}
+        </button>
+        @if (file()) {
+          <button
+            mat-icon-button
+            type="button"
+            aria-label="Quitar archivo seleccionado"
+            [disabled]="busy() || disabled()"
+            (click)="clearFile()"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </div>
+      @if (active()) {
+        <p class="attachments__muted">
+          El comprobante anterior quedará disponible en el historial de soportes.
+        </p>
+      }
+      <div class="attachments__actions">
+        @if (active()) {
+          <button
+            mat-button
+            type="button"
+            [disabled]="busy() || disabled()"
+            (click)="removing.set(!removing())"
+          >
+            {{ removing() ? 'Cancelar retirada' : 'Retirar soporte' }}
+          </button>
+        }
+        <button
+          mat-flat-button
+          type="button"
+          [disabled]="!file() || busy() || disabled() || loading()"
+          (click)="upload()"
+        >
+          {{ busy() ? 'Procesando...' : 'Guardar soporte' }}
+        </button>
+      </div>
+      @if (removing()) {
+        <div class="attachments__removal">
+          <strong>Retirar el soporte activo</strong>
+          <p class="attachments__muted">
+            El archivo se conservará como evidencia. Indica por qué lo retiras.
+          </p>
+          <mat-form-field appearance="outline">
+            <mat-label>Motivo de retirada</mat-label>
+            <textarea matInput rows="2" maxlength="1000" [formControl]="reason"></textarea>
+            @if (reason.invalid && reason.touched) {
+              <mat-error>Escribe un motivo de máximo 1000 caracteres.</mat-error>
+            }
+          </mat-form-field>
+          <div class="attachments__actions">
+            <button mat-button type="button" [disabled]="busy() || disabled()" (click)="remove()">
+              Confirmar retirada
+            </button>
+          </div>
+        </div>
+      }
+    </fieldset>
+  }
+
+  @if (previous().length) {
+    <details class="attachments__history">
+      <summary>
+        Historial de soportes <span>{{ previous().length }}</span>
+      </summary>
+      <p class="attachments__muted">Archivos anteriores conservados para trazabilidad.</p>
+      @for (item of previous(); track item.id) {
+        <article class="attachments__file attachments__file--previous">
+          <div class="attachments__file-info">
+            <strong>{{ item.originalFilename }}</strong>
+            <p class="attachments__muted">
+              {{ formatSize(item.sizeBytes) }} · Cargado por {{ item.uploadedByName }} el
+              {{ item.uploadedAt | date: 'dd/MM/yyyy HH:mm' }}
+            </p>
+            <p class="attachments__muted">
+              Retirado {{ item.removedAt | date: 'dd/MM/yyyy HH:mm'
+              }}{{ item.removedByName ? ' por ' + item.removedByName : '' }}
+            </p>
+            @if (item.removalReason) {
+              <p class="attachments__reason">{{ item.removalReason }}</p>
+            }
+          </div>
+          <button
+            mat-button
+            type="button"
+            [disabled]="busy() || disabled()"
+            (click)="download(item)"
+          >
+            Descargar
+          </button>
+        </article>
+      }
+    </details>
+  }
+</section>

@@ -235,6 +235,14 @@
                       </p>
                     }
                     <div class="sale-detail__actions">
+                      <button
+                        mat-button
+                        type="button"
+                        [disabled]="saving() || loading()"
+                        (click)="inspectPayment(payment.id)"
+                      >
+                        Ver soportes
+                      </button>
                       @if (payment.status === 'REGISTERED') {
                         @if (can('update-payment')) {
                           <button
@@ -479,6 +487,7 @@
                 mat-icon-button
                 type="button"
                 aria-label="Cerrar consulta del pago"
+                [disabled]="saving()"
                 (click)="inspectedPayment.set(null)"
               >
                 <mat-icon>close</mat-icon>
@@ -499,6 +508,12 @@
             @if (payment.notes) {
               <p class="sale-detail__comment">{{ payment.notes }}</p>
             }
+            <app-payment-attachments
+              [payment]="payment"
+              [disabled]="saving()"
+              (busyChange)="attachmentBusy($event)"
+              (changed)="attachmentChanged()"
+            />
             @if (payment.confirmedAt) {
               <p>
                 Confirmado por {{ payment.confirmedByName }} ·
