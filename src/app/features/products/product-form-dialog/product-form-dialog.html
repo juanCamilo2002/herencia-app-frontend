@@ -2,116 +2,153 @@
   <header class="app-form-dialog__header">
     <div>
       <span>Catálogo</span>
-      <h2>{{ isEdit ? 'Editar producto' : 'Nuevo producto'}}</h2>
-      <p>{{ isEdit
-          ? 'Actualiza los datos comerciales del producto. El stock se gestiona desde inventario.'
-          : 'Registra un vino con su precio, bodega, cepa y stock inicial.'
+      <h2>{{ isEdit ? 'Editar producto' : 'Nuevo producto' }}</h2>
+      <p>
+        {{
+          isEdit
+            ? 'Actualiza los datos del artículo. El stock se gestiona desde inventario.'
+            : 'Registra un artículo para vender o producir, con sus características opcionales.'
         }}
       </p>
     </div>
-
-    <button mat-icon-button type="button" aria-label="Cerrar" (click)="close()">
+    <button
+      mat-icon-button
+      type="button"
+      aria-label="Cerrar producto"
+      [disabled]="saving()"
+      (click)="close()"
+    >
       <mat-icon>close</mat-icon>
     </button>
   </header>
-
   <form class="app-form-dialog__form" [formGroup]="form" (ngSubmit)="submit()">
-    <mat-form-field appearance="outline" class="app-form-dialog__field--full">
-      <mat-label>Nombre</mat-label>
-      <input matInput formControlName="name" autocomplete="off" />
-
-      @if (hasError('name', 'required')) {
-        <mat-error>El nombre es obligatorio.</mat-error>
-      }
-
-      @if (hasError('name', 'maxlength')) {
-        <mat-error>Máximo 120 caracteres.</mat-error>
+    <mat-form-field appearance="outline"
+      ><mat-label>Nombre</mat-label><input matInput formControlName="name" maxlength="120" />
+      @if (form.controls.name.invalid && form.controls.name.touched) {
+        <mat-error>Escribe un nombre de máximo 120 caracteres.</mat-error>
       }
     </mat-form-field>
-
-    <mat-form-field appearance="outline">
-      <mat-label>Bodega</mat-label>
-      <input matInput formControlName="winery" autocomplete="off" />
-
-      @if (hasError('winery', 'maxlength')) {
-        <mat-error>Máximo 120 caracteres.</mat-error>
-      }
-    </mat-form-field>
-
-    <mat-form-field appearance="outline">
-      <mat-label>Cepa</mat-label>
-      <input matInput formControlName="grapeVariety" autocomplete="off" />
-
-      @if (hasError('grapeVariety', 'maxlength')) {
-        <mat-error>Máximo 80 caracteres.</mat-error>
-      }
-    </mat-form-field>
-
-    <mat-form-field appearance="outline">
-      <mat-label>Año</mat-label>
-      <input matInput type="number" formControlName="vintage" />
-
-      @if (hasError('vintage', 'min')) {
-        <mat-error>El año debe ser mayor o igual a 1900.</mat-error>
-      }
-    </mat-form-field>
-
-    <mat-form-field appearance="outline">
-      <mat-label>Precio</mat-label>
-      <input matInput type="number" formControlName="price" />
-
-      @if (hasError('price', 'required')) {
-        <mat-error>El precio es obligatorio.</mat-error>
-      }
-
-      @if (hasError('price', 'min')) {
-        <mat-error>El precio debe ser mayor a 0.</mat-error>
-      }
-    </mat-form-field>
-
-    @if (!isEdit) {
-      <mat-form-field appearance="outline">
-        <mat-label>Stock inicial</mat-label>
-        <input matInput type="number" formControlName="stock" />
-  
-        @if (hasError('stock', 'required')) {
-          <mat-error>El stock inicial es obligatorio.</mat-error>
+    <mat-form-field appearance="outline"
+      ><mat-label>Categoría (opcional)</mat-label
+      ><mat-select formControlName="categoryId">
+        <mat-option [value]="null">Sin categoría</mat-option>
+        @if (currentCategoryMissing()) {
+          <mat-option [value]="product!.categoryId"
+            >{{ product!.categoryName }} (asignación actual{{
+              product!.categoryActive === false ? ', inactiva' : ''
+            }})</mat-option
+          >
         }
-  
-        @if (hasError('stock', 'min')) {
-          <mat-error>El stock no puede ser negativo.</mat-error>
+        @for (category of categories(); track category.id) {
+          <mat-option [value]="category.id">{{ category.name }}</mat-option>
+        }</mat-select
+      ><mat-hint>Las categorías organizan; no exigen características.</mat-hint></mat-form-field
+    >
+    @if (categoriesLoading()) {
+      <p class="app-form-dialog__field--full" role="status">Cargando categorías...</p>
+    }
+    @if (categoriesError()) {
+      <p class="app-form-dialog__inline-error" role="alert">
+        No fue posible cargar las categorías.
+        <button mat-button type="button" [disabled]="saving()" (click)="loadCategories()">
+          Reintentar categorías
+        </button>
+      </p>
+    }
+    <mat-form-field appearance="outline" class="app-form-dialog__field--full"
+      ><mat-label>Descripción (opcional)</mat-label
+      ><textarea matInput rows="2" maxlength="2000" formControlName="description"></textarea>
+    </mat-form-field>
+    <mat-form-field appearance="outline"
+      ><mat-label>Precio de venta</mat-label
+      ><input matInput type="number" min="0.01" step="0.01" formControlName="price" />
+      @if (form.controls.price.invalid && form.controls.price.touched) {
+        <mat-error>Importe positivo de máximo dos decimales.</mat-error>
+      }
+    </mat-form-field>
+    <mat-form-field appearance="outline"
+      ><mat-label>Stock mínimo</mat-label
+      ><input matInput type="number" min="0" step="1" formControlName="minimumStock" />
+      @if (form.controls.minimumStock.invalid && form.controls.minimumStock.touched) {
+        <mat-error>Escribe un número entero no negativo.</mat-error>
+      }
+    </mat-form-field>
+    @if (!isEdit) {
+      <mat-form-field appearance="outline"
+        ><mat-label>Stock inicial</mat-label
+        ><input matInput type="number" min="0" step="1" formControlName="stock" />
+        @if (form.controls.stock.invalid && form.controls.stock.touched) {
+          <mat-error>Escribe un número entero no negativo.</mat-error>
         }
       </mat-form-field>
     }
-
-    <mat-form-field appearance="outline">
-      <mat-label>Stock mínimo</mat-label>
-      <input matInput type="number" formControlName="minimumStock" />
-
-      @if (hasError('minimumStock', 'required')) {
-        <mat-error>El stock mínimo es obligatorio.</mat-error>
-      }
-
-      @if (hasError('minimumStock', 'min')) {
-        <mat-error>El stock mínimo no puede ser negativo.</mat-error>
-      }
-    </mat-form-field>
-
-    @if (error()) {
-      <p class="app-form-dialog__error">{{ error() }}</p>
-    }
-
-    <footer class="app-form-dialog__actions">
-      <button mat-button type="button" [disabled]="saving()" (click)="close()">
-        Cancelar
-      </button>
-
-      <button mat-flat-button type="submit" [disabled]="saving()">
-        @if (saving()) {
-          Guardando...
-        } @else {
-          {{ isEdit ? 'Guardar cambios' : 'Crear producto'}}
+    <section
+      class="product-attributes app-form-dialog__field--full"
+      aria-label="Características adicionales"
+    >
+      <div class="product-attributes__heading">
+        <div>
+          <h3>Características adicionales</h3>
+          <p>Opcionales · Hasta 20. Por ejemplo: Cepa, Añada, Material o Color.</p>
+        </div>
+        <button
+          mat-stroked-button
+          type="button"
+          [disabled]="saving() || attributes.length >= 20"
+          (click)="addAttribute()"
+        >
+          Agregar característica
+        </button>
+      </div>
+      <div formArrayName="attributes">
+        @for (attribute of attributes.controls; track attribute; let index = $index) {
+          <div class="product-attributes__row" [formGroupName]="index">
+            <mat-form-field appearance="outline"
+              ><mat-label>Característica</mat-label
+              ><input matInput formControlName="name" maxlength="60" placeholder="Ej. Material" />
+              @if (attribute.controls.name.invalid && attribute.controls.name.touched) {
+                <mat-error>Nombre obligatorio, máximo 60 caracteres.</mat-error>
+              }
+            </mat-form-field>
+            <mat-form-field appearance="outline"
+              ><mat-label>Valor</mat-label
+              ><input
+                matInput
+                formControlName="value"
+                maxlength="250"
+                placeholder="Ej. Acero inoxidable"
+              />
+              @if (attribute.controls.value.invalid && attribute.controls.value.touched) {
+                <mat-error>Valor obligatorio, máximo 250 caracteres.</mat-error>
+              }
+            </mat-form-field>
+            <button
+              mat-icon-button
+              type="button"
+              [attr.aria-label]="'Quitar característica ' + (index + 1)"
+              [disabled]="saving()"
+              (click)="removeAttribute(index)"
+            >
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+          </div>
+        } @empty {
+          <p>Este producto no tiene características adicionales.</p>
         }
+      </div>
+      @if (attributes.hasError('duplicateNames') && attributes.touched) {
+        <p class="app-form-dialog__inline-error" role="alert">
+          Los nombres de las características no pueden repetirse.
+        </p>
+      }
+    </section>
+    @if (error()) {
+      <p class="app-form-dialog__error" role="alert">{{ error() }}</p>
+    }
+    <footer class="app-form-dialog__actions">
+      <button mat-button type="button" [disabled]="saving()" (click)="close()">Cancelar</button
+      ><button mat-flat-button type="submit" [disabled]="saving() || categoriesLoading()">
+        {{ saving() ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Crear producto' }}
       </button>
     </footer>
   </form>

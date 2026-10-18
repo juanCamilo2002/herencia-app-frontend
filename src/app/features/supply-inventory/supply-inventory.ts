@@ -1,9 +1,18 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  OnInit,
+  signal,
+  TemplateRef,
+  viewChild,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogClose } from '@angular/material/dialog';
 import { PageEvent, MatPaginatorModule } from '@angular/material/paginator';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
@@ -29,6 +38,7 @@ import {
     MatButtonModule,
     MatIconModule,
     MatPaginatorModule,
+    MatDialogClose,
     MatTableModule,
     MetricCard,
     StatusBadge,
@@ -43,6 +53,8 @@ export class SupplyInventory implements OnInit {
   private readonly toast = inject(ToastService);
   private readonly session = inject(AuthSessionService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly reasonDialog = viewChild.required<TemplateRef<unknown>>('reasonDialog');
+  protected readonly selectedMovement = signal<SupplyMovement | null>(null);
   private listRequest?: Subscription;
   private summaryRequest?: Subscription;
   protected readonly summaryLoading = signal(true);
@@ -99,6 +111,20 @@ export class SupplyInventory implements OnInit {
   protected movementDelta(movement: SupplyMovement) {
     const delta = movement.newStock - movement.previousStock;
     return delta > 0 ? `+${delta}` : `${delta}`;
+  }
+
+  protected showReason(movement: SupplyMovement) {
+    if (!movement.reason?.trim()) return;
+    this.selectedMovement.set(movement);
+    this.dialog.open(this.reasonDialog(), {
+      width: '640px',
+      maxWidth: 'calc(100vw - 32px)',
+      maxHeight: 'calc(100dvh - 32px)',
+      panelClass: 'app-dialog-panel',
+      ariaLabel: 'Motivo del movimiento',
+      autoFocus: 'first-tabbable',
+      restoreFocus: true,
+    });
   }
 
   protected openCreateMovementDialog() {

@@ -1,11 +1,20 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  OnInit,
+  signal,
+  TemplateRef,
+  viewChild,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogClose } from '@angular/material/dialog';
 import { PageEvent, MatPaginatorModule } from '@angular/material/paginator';
 import { ToastService } from '../../shared/services/toast.service';
 import { InventoryMovementDialog } from './inventory-movement-dialog/inventory-movement-dialog';
@@ -30,6 +39,7 @@ import {
     MetricCard,
     StatusBadge,
     MatPaginatorModule,
+    MatDialogClose,
   ],
   selector: 'app-inventory',
   styleUrl: './inventory.scss',
@@ -41,6 +51,8 @@ export class Inventory implements OnInit {
   private readonly toast = inject(ToastService);
   private readonly session = inject(AuthSessionService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly reasonDialog = viewChild.required<TemplateRef<unknown>>('reasonDialog');
+  protected readonly selectedMovement = signal<StockMovement | null>(null);
   private listRequest?: Subscription;
   private summaryRequest?: Subscription;
   protected readonly summaryLoading = signal(true);
@@ -139,6 +151,20 @@ export class Inventory implements OnInit {
   protected movementDelta(movement: StockMovement) {
     const delta = movement.newStock - movement.previousStock;
     return delta > 0 ? `+${delta}` : `${delta}`;
+  }
+
+  protected showReason(movement: StockMovement) {
+    if (!movement.reason?.trim()) return;
+    this.selectedMovement.set(movement);
+    this.dialog.open(this.reasonDialog(), {
+      width: '640px',
+      maxWidth: 'calc(100vw - 32px)',
+      maxHeight: 'calc(100dvh - 32px)',
+      panelClass: 'app-dialog-panel',
+      ariaLabel: 'Motivo del movimiento',
+      autoFocus: 'first-tabbable',
+      restoreFocus: true,
+    });
   }
 
   protected openCreateMovementDialog() {

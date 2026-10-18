@@ -41,6 +41,15 @@ export const routes: Routes = [
         loadComponent: () => import('./features/products/products').then((m) => m.Products),
       },
       {
+        path: 'product-categories',
+        canActivate: [permissionGuard],
+        data: { permission: 'product-categories:read' },
+        loadComponent: () =>
+          import('./features/product-categories/product-categories').then(
+            (m) => m.ProductCategories,
+          ),
+      },
+      {
         path: 'customers',
         canActivate: [permissionGuard],
         data: { permission: 'customers:read' },

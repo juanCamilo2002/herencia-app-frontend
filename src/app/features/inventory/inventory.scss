@@ -5,6 +5,123 @@
 .inventory-product {
   display: grid;
   gap: 2px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.movement-table table {
+  table-layout: fixed;
+  min-width: 1120px;
+}
+
+.movement-table {
+  .mat-column-movement {
+    width: 136px;
+  }
+  .mat-column-product {
+    width: 22%;
+  }
+  .mat-column-quantity {
+    width: 110px;
+    text-align: right;
+  }
+  .mat-column-stock {
+    width: 190px;
+    text-align: right;
+  }
+  .mat-column-source {
+    width: 120px;
+    overflow-wrap: anywhere;
+  }
+  .mat-column-movementDateTime {
+    width: 130px;
+  }
+
+  td {
+    padding-block: 12px;
+    vertical-align: top;
+  }
+  td.mat-column-quantity,
+  td.mat-column-movementDateTime {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.movement-stock {
+  display: grid;
+  gap: 4px;
+  font-variant-numeric: tabular-nums;
+
+  > span {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    white-space: nowrap;
+  }
+  > span > span:first-child {
+    color: var(--color-muted);
+    font-size: 12px;
+  }
+}
+
+.movement-reason__preview {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  margin: 0;
+  line-height: 1.5;
+  color: var(--color-text);
+}
+
+.movement-reason__button.mat-mdc-button {
+  --mat-button-text-horizontal-padding: 12px;
+  padding: 0 12px;
+  min-width: 0;
+  font-size: 12px;
+}
+.movement-reason__empty {
+  color: var(--color-muted);
+  font-weight: 400;
+}
+.movement-card__reason {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+.movement-card__reason .movement-reason__preview {
+  margin-top: 6px;
+}
+.movement-card__product {
+  overflow-wrap: anywhere;
+}
+
+.movement-reason-dialog__name {
+  overflow-wrap: anywhere;
+}
+.movement-reason-dialog__body {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px 24px 24px;
+}
+.movement-reason-dialog__metadata {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.movement-reason-dialog__text {
+  margin: 18px 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.7;
+  font-size: 14px;
+  color: var(--color-text);
 }
 
 .movement-card__date {

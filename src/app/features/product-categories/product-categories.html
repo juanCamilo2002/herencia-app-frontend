@@ -1,0 +1,110 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <span class="page__eyebrow">Catálogo</span>
+      <h1 class="page__title">Categorías de productos</h1>
+      <p class="page__subtitle">Clasifica los artículos que vendes o produces.</p>
+    </div>
+    @if (can('create')) {
+      <button mat-flat-button type="button" [disabled]="changing()" (click)="edit()">
+        <mat-icon>add</mat-icon>Nueva categoría
+      </button>
+    }
+  </header>
+  <section class="data-panel" [attr.aria-busy]="loading() || changing()">
+    <div class="data-panel__header">
+      <div>
+        <h2>Categorías del catálogo</h2>
+        <p>Las categorías inactivas se conservan en sus productos.</p>
+      </div>
+      <button mat-button type="button" [disabled]="loading() || changing()" (click)="load()">
+        Actualizar
+      </button>
+    </div>
+    @if (loading()) {
+      <p role="status">Cargando categorías...</p>
+    } @else if (error()) {
+      <p role="alert">{{ error() }}</p>
+      <button mat-button type="button" (click)="load()">Reintentar</button>
+    } @else if (!rows().length) {
+      <div class="empty-state">
+        <mat-icon>category</mat-icon>
+        <h3>No hay categorías registradas</h3>
+        <p>Puedes comenzar con Vinos, Accesorios o Cristalería.</p>
+      </div>
+    } @else {
+      <div class="data-table data-table--md">
+        <table mat-table [dataSource]="rows()">
+          <ng-container matColumnDef="name"
+            ><th mat-header-cell *matHeaderCellDef>Categoría</th>
+            <td mat-cell *matCellDef="let row">
+              <strong>{{ row.name }}</strong>
+            </td></ng-container
+          >
+          <ng-container matColumnDef="description"
+            ><th mat-header-cell *matHeaderCellDef>Descripción</th>
+            <td mat-cell *matCellDef="let row">
+              {{ row.description || 'Sin descripción' }}
+            </td></ng-container
+          >
+          <ng-container matColumnDef="active"
+            ><th mat-header-cell *matHeaderCellDef>Estado</th>
+            <td mat-cell *matCellDef="let row">
+              <app-status-badge
+                [label]="row.active ? 'Activa' : 'Inactiva'"
+                [tone]="row.active ? 'success' : 'default'"
+                size="small"
+              /></td
+          ></ng-container>
+          <ng-container matColumnDef="actions"
+            ><th mat-header-cell *matHeaderCellDef>Acciones</th>
+            <td mat-cell *matCellDef="let row">
+              @if (can('update')) {
+                <button mat-button type="button" [disabled]="changing()" (click)="edit(row)">
+                  Editar
+                </button>
+              }
+              @if (can('disable')) {
+                <button
+                  mat-button
+                  type="button"
+                  [disabled]="changing()"
+                  (click)="changeActive(row)"
+                >
+                  {{ row.active ? 'Desactivar' : 'Reactivar' }}
+                </button>
+              }
+            </td></ng-container
+          >
+          <tr mat-header-row *matHeaderRowDef="columns"></tr>
+          <tr mat-row *matRowDef="let row; columns: columns"></tr>
+        </table>
+      </div>
+      <div class="data-mobile-list">
+        @for (row of rows(); track row.id) {
+          <article class="data-card">
+            <div class="data-card__header">
+              <strong>{{ row.name }}</strong
+              ><app-status-badge
+                [label]="row.active ? 'Activa' : 'Inactiva'"
+                [tone]="row.active ? 'success' : 'default'"
+                size="small"
+              />
+            </div>
+            <p>{{ row.description || 'Sin descripción' }}</p>
+            @if (can('update')) {
+              <button mat-button type="button" [disabled]="changing()" (click)="edit(row)">
+                Editar
+              </button>
+            }
+            @if (can('disable')) {
+              <button mat-button type="button" [disabled]="changing()" (click)="changeActive(row)">
+                {{ row.active ? 'Desactivar' : 'Reactivar' }}
+              </button>
+            }
+          </article>
+        }
+      </div>
+    }
+  </section>
+</section>

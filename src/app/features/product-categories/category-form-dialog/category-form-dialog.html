@@ -1,0 +1,39 @@
+<section class="app-form-dialog">
+  <header class="app-form-dialog__header">
+    <div>
+      <span>Catálogo</span>
+      <h2>{{ category ? 'Editar categoría' : 'Nueva categoría' }}</h2>
+      <p>Organiza productos sin imponerles características.</p>
+    </div>
+    <button
+      mat-icon-button
+      type="button"
+      aria-label="Cerrar categoría"
+      [disabled]="saving()"
+      (click)="close()"
+    >
+      <mat-icon>close</mat-icon>
+    </button>
+  </header>
+  <form class="app-form-dialog__form" [formGroup]="form" (ngSubmit)="submit()">
+    <mat-form-field appearance="outline" class="app-form-dialog__field--full"
+      ><mat-label>Nombre</mat-label><input matInput formControlName="name" maxlength="100" />
+      @if (form.controls.name.invalid && form.controls.name.touched) {
+        <mat-error>Escribe un nombre de máximo 100 caracteres.</mat-error>
+      }
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="app-form-dialog__field--full"
+      ><mat-label>Descripción (opcional)</mat-label
+      ><textarea matInput formControlName="description" rows="3" maxlength="1000"></textarea>
+    </mat-form-field>
+    @if (error()) {
+      <p class="app-form-dialog__error" role="alert">{{ error() }}</p>
+    }
+    <footer class="app-form-dialog__actions">
+      <button mat-button type="button" [disabled]="saving()" (click)="close()">Cancelar</button
+      ><button mat-flat-button type="submit" [disabled]="saving()">
+        {{ saving() ? 'Guardando...' : 'Guardar categoría' }}
+      </button>
+    </footer>
+  </form>
+</section>

@@ -69,9 +69,16 @@ export const APP_NAVIGATION_ENTRIES: AppNavigationEntry[] = [
       {
         type: 'item',
         label: 'Productos',
-        icon: 'wine_bar',
+        icon: 'inventory_2',
         route: '/products',
         permission: 'products:read',
+      },
+      {
+        type: 'item',
+        label: 'Categorías de productos',
+        icon: 'category',
+        route: '/product-categories',
+        permission: 'product-categories:read',
       },
       {
         type: 'item',

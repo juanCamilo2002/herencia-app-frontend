@@ -1,0 +1,22 @@
+:host {
+  display: block;
+}
+table {
+  table-layout: fixed;
+}
+td {
+  overflow-wrap: anywhere;
+}
+.mat-column-name {
+  width: 22%;
+}
+.mat-column-active {
+  width: 120px;
+}
+.mat-column-actions {
+  width: 240px;
+  white-space: nowrap;
+}
+.data-card {
+  overflow-wrap: anywhere;
+}

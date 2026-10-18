@@ -1,7 +1,8 @@
 import { Type } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
-import { Subject } from 'rxjs';
+import { of, Subject } from 'rxjs';
+import { ProductCategoryService } from './product-categories/data-access/product-category.service';
 import { vi } from 'vitest';
 import { AuthSessionService } from '../core/auth/auth-session.service';
 import { ToastService } from '../shared/services/toast.service';
@@ -143,6 +144,7 @@ for (const module of modules) {
         imports: [module.component],
         providers: [
           { provide: module.service, useValue: { [module.list]: list, getSummary } },
+          { provide: ProductCategoryService, useValue: { options: () => of([]) } },
           { provide: MatDialog, useValue: { open: () => ({ afterClosed: () => closed }) } },
           { provide: AuthSessionService, useValue: { hasPermission: () => false } },
           { provide: ToastService, useValue: { success: vi.fn(), error: vi.fn() } },

@@ -1,5 +1,14 @@
 import { CurrencyPipe } from '@angular/common';
-import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  OnInit,
+  signal,
+  TemplateRef,
+  viewChild,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
 import { MatIconModule } from '@angular/material/icon';
@@ -9,10 +18,18 @@ import { MatTableModule } from '@angular/material/table';
 import { MetricCard } from '../../shared/components/metric-card/metric-card';
 import { StatusBadge } from '../../shared/components/status-badge/status-badge';
 import { ProductService } from './data-access/product.service';
-import { Product, ProductSummary } from './data-access/product.model';
+import { Product, ProductSummary, ProductFilters } from './data-access/product.model';
 import { MatButtonModule } from '@angular/material/button';
 import { PageEvent, MatPaginatorModule } from '@angular/material/paginator';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogClose } from '@angular/material/dialog';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import {
+  ProductCategory,
+  ProductCategoryService,
+} from '../product-categories/data-access/product-category.service';
 import { ProductFormDialog } from './product-form-dialog/product-form-dialog';
 import { ConfirmDialog } from '../../shared/components/confirm-dialog/confirm-dialog';
 import { ToastService } from '../../shared/services/toast.service';
@@ -29,6 +46,11 @@ import { AuthSessionService } from '../../core/auth/auth-session.service';
     MetricCard,
     StatusBadge,
     MatPaginatorModule,
+    MatDialogClose,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
   ],
   selector: 'app-products',
   styleUrl: './products.scss',
@@ -40,6 +62,18 @@ export class Products implements OnInit {
   private readonly toast = inject(ToastService);
   private readonly session = inject(AuthSessionService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly categoryService = inject(ProductCategoryService);
+  private readonly fb = inject(FormBuilder);
+  private readonly detailDialog = viewChild.required<TemplateRef<unknown>>('productDetail');
+  private readonly appliedFilters = signal<ProductFilters>({});
+  protected readonly categories = signal<ProductCategory[]>([]);
+  protected readonly categoriesError = signal(false);
+  protected readonly categoriesLoading = signal(false);
+  protected readonly inspectedProduct = signal<Product | null>(null);
+  protected readonly filtersForm = this.fb.nonNullable.group({
+    name: ['', Validators.maxLength(120)],
+    category: ['all'],
+  });
   private listRequest?: Subscription;
   private summaryRequest?: Subscription;
   protected readonly summaryLoading = signal(true);
@@ -57,13 +91,11 @@ export class Products implements OnInit {
 
   protected readonly displayedColumns = computed(() => [
     'product',
-    'winery',
-    'grapeVariety',
-    'vintage',
+    'category',
     'price',
     'stock',
     'status',
-    ...(this.hasProductActions() ? ['actions'] : []),
+    'actions',
   ]);
 
   protected readonly sortedProducts = computed(() => this.products());
@@ -90,6 +122,7 @@ export class Products implements OnInit {
   );
 
   ngOnInit(): void {
+    this.loadCategories();
     this.loadSummary();
     this.loadProducts();
   }
@@ -100,16 +133,28 @@ export class Products implements OnInit {
     this.error.set(null);
 
     this.listRequest = this.productService
-      .getProducts({
-        page: this.pageIndex(),
-        size: this.pageSize(),
-        sort: this.sortParam(),
-      })
+      .getProducts(
+        {
+          page: this.pageIndex(),
+          size: this.pageSize(),
+          sort: this.sortParam(),
+        },
+        this.appliedFilters(),
+      )
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (page) => {
           this.products.set(page.content);
           this.totalElements.set(page.totalElements);
+          if (
+            page.content.length === 0 &&
+            this.pageIndex() > 0 &&
+            page.totalPages <= this.pageIndex()
+          ) {
+            this.pageIndex.set(Math.max(0, page.totalPages - 1));
+            this.loadProducts();
+            return;
+          }
           this.loading.set(false);
         },
         error: () => {
@@ -142,6 +187,56 @@ export class Products implements OnInit {
     this.sort.set(sort);
     this.pageIndex.set(0);
     this.loadProducts();
+  }
+
+  protected loadCategories() {
+    if (this.categoriesLoading()) return;
+    this.categoriesLoading.set(true);
+    this.categoriesError.set(false);
+    this.categoryService
+      .options(true)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (categories) => {
+          this.categories.set(categories);
+          this.categoriesLoading.set(false);
+        },
+        error: () => {
+          this.categoriesError.set(true);
+          this.categoriesLoading.set(false);
+        },
+      });
+  }
+
+  protected applyFilters() {
+    this.filtersForm.markAllAsTouched();
+    if (this.filtersForm.invalid) return;
+    const value = this.filtersForm.getRawValue();
+    this.appliedFilters.set({
+      name: value.name.trim() || undefined,
+      categoryId:
+        value.category !== 'all' && value.category !== 'uncategorized' ? value.category : undefined,
+      uncategorized: value.category === 'uncategorized',
+    });
+    this.pageIndex.set(0);
+    this.loadProducts();
+  }
+
+  protected clearFilters() {
+    this.filtersForm.reset({ name: '', category: 'all' });
+    this.applyFilters();
+  }
+
+  protected openDetailDialog(product: Product) {
+    this.inspectedProduct.set(product);
+    this.dialog.open(this.detailDialog(), {
+      width: '720px',
+      maxWidth: 'calc(100vw - 32px)',
+      maxHeight: 'calc(100dvh - 32px)',
+      panelClass: 'app-dialog-panel',
+      ariaLabel: 'Detalle de producto',
+      autoFocus: 'first-tabbable',
+    });
   }
 
   protected pageChanged(event: PageEvent) {

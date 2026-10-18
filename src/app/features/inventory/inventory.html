@@ -36,7 +36,7 @@
         tone="success"
       />
       <app-metric-card
-        label="Saldias"
+        label="Salidas"
         [value]="outboundMovements()"
         hint="Descuentos de inventario"
         icon="indeterminate_check_box"
@@ -45,14 +45,14 @@
       <app-metric-card
         label="Ajustes"
         [value]="adjustmenMovements()"
-        hint="Correciones manuales de stock"
+        hint="Correcciones manuales de stock"
         icon="tune"
       />
 
       <app-metric-card
         label="Mermas"
         [value]="lossMovements()"
-        hint="Productos periddos o dañados"
+        hint="Productos perdidos o dañados"
         icon="warning"
         tone="danger"
       />
@@ -97,11 +97,11 @@
           <span class="empty-state__icon">
             <mat-icon>inventory_2</mat-icon>
           </span>
-          <h3>No hay movimientos registradpos</h3>
+          <h3>No hay movimientos registrados</h3>
           <p>Cuando se registren entradas, salidas o ventas aparecerán aquí.</p>
         </div>
       } @else {
-        <div class="data-table data-table--lg">
+        <div class="data-table data-table--lg movement-table">
           <table mat-table [dataSource]="movements()">
             <ng-container matColumnDef="movement">
               <th mat-header-cell *matHeaderCellDef>Movimiento</th>
@@ -134,7 +134,14 @@
             <ng-container matColumnDef="stock">
               <th mat-header-cell *matHeaderCellDef>Stock</th>
               <td mat-cell *matCellDef="let movement">
-                <strong>{{ movement.previousStock }} → {{ movement.newStock }}</strong>
+                <div class="movement-stock">
+                  <span
+                    ><span>Antes</span><span>{{ movement.previousStock }}</span></span
+                  >
+                  <span
+                    ><span>Ahora</span><strong>{{ movement.newStock }}</strong></span
+                  >
+                </div>
               </td>
             </ng-container>
 
@@ -148,14 +155,28 @@
             <ng-container matColumnDef="reason">
               <th mat-header-cell *matHeaderCellDef>Motivo</th>
               <td mat-cell *matCellDef="let movement">
-                {{ movement.reason || 'Sin motivo' }}
+                @if (movement.reason?.trim()) {
+                  <span class="movement-reason__preview">{{ movement.reason }}</span>
+                  <button
+                    mat-button
+                    type="button"
+                    class="movement-reason__button"
+                    [attr.aria-label]="'Ver motivo del movimiento de ' + movement.productName"
+                    (click)="showReason(movement)"
+                  >
+                    Ver motivo
+                  </button>
+                } @else {
+                  <span class="movement-reason__empty">Sin motivo</span>
+                }
               </td>
             </ng-container>
 
             <ng-container matColumnDef="movementDateTime">
               <th mat-header-cell *matHeaderCellDef>Fecha movimiento</th>
               <td mat-cell *matCellDef="let movement">
-                {{ movement.movementDateTime | date: 'dd/MM/yyyy HH:mm' }}
+                <span>{{ movement.movementDateTime | date: 'dd/MM/yyyy' }}</span>
+                <small>{{ movement.movementDateTime | date: 'HH:mm' }}</small>
               </td>
             </ng-container>
 
@@ -208,9 +229,22 @@
                   <strong>{{ sourceLabel(movement.sourceType) }}</strong>
                 </div>
 
-                <div>
+                <div class="movement-card__reason">
                   <span>Motivo</span>
-                  <strong>{{ movement.reason || 'Sin motivo' }}</strong>
+                  @if (movement.reason?.trim()) {
+                    <p class="movement-reason__preview">{{ movement.reason }}</p>
+                    <button
+                      mat-button
+                      type="button"
+                      class="movement-reason__button"
+                      [attr.aria-label]="'Ver motivo del movimiento de ' + movement.productName"
+                      (click)="showReason(movement)"
+                    >
+                      Ver motivo
+                    </button>
+                  } @else {
+                    <strong class="movement-reason__empty">Sin motivo</strong>
+                  }
                 </div>
               </div>
             </article>
@@ -228,3 +262,31 @@
     </section>
   }
 </section>
+
+<ng-template #reasonDialog>
+  @if (selectedMovement(); as movement) {
+    <section class="app-form-dialog">
+      <header class="app-form-dialog__header">
+        <div>
+          <span>Inventario de productos</span>
+          <h2>Motivo del movimiento</h2>
+          <p class="movement-reason-dialog__name">{{ movement.productName }}</p>
+        </div>
+        <button mat-icon-button type="button" mat-dialog-close aria-label="Cerrar motivo">
+          <mat-icon>close</mat-icon>
+        </button>
+      </header>
+      <div class="movement-reason-dialog__body">
+        <div class="movement-reason-dialog__metadata">
+          <app-status-badge
+            [label]="movementLabel(movement.type)"
+            [tone]="movementTone(movement.type)"
+            size="small"
+          />
+          <span>{{ movement.movementDateTime | date: 'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <p class="movement-reason-dialog__text">{{ movement.reason }}</p>
+      </div>
+    </section>
+  }
+</ng-template>
