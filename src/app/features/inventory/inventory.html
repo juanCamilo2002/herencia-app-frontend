@@ -18,16 +18,7 @@
     </div>
   </header>
 
-  @if (loading()) {
-    <section class="data-panel">
-      <p class="data-panel__muted">Cargando movimientos...</p>
-    </section>
-  } @else if (error()) {
-    <section class="data-panel data-panel--error">
-      <h2>No fue posible cargar inventario</h2>
-      <p>{{ error() }}</p>
-    </section>
-  } @else {
+  @if (summary()) {
     <section class="data-stats">
       <app-metric-card
         label="Movimientos"
@@ -66,7 +57,27 @@
         tone="danger"
       />
     </section>
-
+  } @else if (summaryLoading()) {
+    <p class="data-panel__muted" role="status">Cargando estadísticas...</p>
+  }
+  @if (summaryError()) {
+    <section class="data-panel data-panel--error" role="alert">
+      <p>{{ summaryError() }}</p>
+      <button mat-button type="button" [disabled]="summaryLoading()" (click)="loadSummary()">
+        Reintentar estadísticas
+      </button>
+    </section>
+  }
+  @if (loading()) {
+    <section class="data-panel" aria-busy="true">
+      <p class="data-panel__muted" role="status">Cargando movimientos...</p>
+    </section>
+  } @else if (error()) {
+    <section class="data-panel data-panel--error" role="alert">
+      <p>{{ error() }}</p>
+      <button mat-button type="button" (click)="loadMovements()">Reintentar listado</button>
+    </section>
+  } @else {
     <section class="data-panel">
       <div class="data-panel__header">
         <div class="data-panel__title-group">

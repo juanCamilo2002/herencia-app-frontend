@@ -1,5 +1,7 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subscription } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -37,6 +39,11 @@ export class Users implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly toast = inject(ToastService);
   private readonly session = inject(AuthSessionService);
+  private readonly destroyRef = inject(DestroyRef);
+  private listRequest?: Subscription;
+  private summaryRequest?: Subscription;
+  protected readonly summaryLoading = signal(true);
+  protected readonly summaryError = signal<string | null>(null);
 
   protected readonly users = signal<User[]>([]);
   protected readonly loading = signal(true);
@@ -84,15 +91,17 @@ export class Users implements OnInit {
   }
 
   protected loadUsers() {
+    this.listRequest?.unsubscribe();
     this.loading.set(true);
     this.error.set(null);
 
-    this.userService
+    this.listRequest = this.userService
       .getUsers({
         page: this.pageIndex(),
         size: this.pageSize(),
         sort: this.sortParam(),
       })
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (page) => {
           this.users.set(page.content);
@@ -106,10 +115,23 @@ export class Users implements OnInit {
       });
   }
 
-  private loadSummary() {
-    this.userService.getSummary().subscribe({
-      next: (summary) => this.summary.set(summary),
-    });
+  protected loadSummary() {
+    this.summaryRequest?.unsubscribe();
+    this.summaryLoading.set(true);
+    this.summaryError.set(null);
+    this.summaryRequest = this.userService
+      .getSummary()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (summary) => {
+          this.summary.set(summary);
+          this.summaryLoading.set(false);
+        },
+        error: () => {
+          this.summaryError.set('No fue posible actualizar las estadísticas.');
+          this.summaryLoading.set(false);
+        },
+      });
   }
 
   protected sortUsers(sort: Sort) {

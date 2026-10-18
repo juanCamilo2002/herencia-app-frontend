@@ -1,5 +1,7 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subscription } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -36,6 +38,9 @@ export class Roles implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly toast = inject(ToastService);
   private readonly session = inject(AuthSessionService);
+  private readonly destroyRef = inject(DestroyRef);
+  private listRequest?: Subscription;
+  protected readonly hasLoaded = signal(false);
 
   protected readonly roles = signal<Role[]>([]);
   protected readonly loading = signal(true);
@@ -97,19 +102,24 @@ export class Roles implements OnInit {
   }
 
   protected loadRoles() {
+    this.listRequest?.unsubscribe();
     this.loading.set(true);
     this.error.set(null);
 
-    this.roleService.getRoles().subscribe({
-      next: (roles) => {
-        this.roles.set(roles);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.error.set('No fue posible cargar los roles.');
-        this.loading.set(false);
-      },
-    });
+    this.listRequest = this.roleService
+      .getRoles()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (roles) => {
+          this.roles.set(roles);
+          this.hasLoaded.set(true);
+          this.loading.set(false);
+        },
+        error: () => {
+          this.error.set('No fue posible cargar los roles.');
+          this.loading.set(false);
+        },
+      });
   }
 
   protected hasActionsForRole(role: Role) {

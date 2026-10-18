@@ -18,16 +18,7 @@
     </div>
   </header>
 
-  @if (loading()) {
-    <section class="data-panel">
-      <p class="data-panel__muted">Cargando roles...</p>
-    </section>
-  } @else if (error()) {
-    <section class="data-panel data-panel--error">
-      <h2>No fue posible cargar roles</h2>
-      <p>{{ error() }}</p>
-    </section>
-  } @else {
+  @if (hasLoaded()) {
     <section class="data-stats">
       <app-metric-card
         label="Total roles"
@@ -57,7 +48,17 @@
         icon="shield"
       />
     </section>
-
+  }
+  @if (loading()) {
+    <section class="data-panel" aria-busy="true">
+      <p class="data-panel__muted" role="status">Cargando roles...</p>
+    </section>
+  } @else if (error()) {
+    <section class="data-panel data-panel--error" role="alert">
+      <p>{{ error() }}</p>
+      <button mat-button type="button" (click)="loadRoles()">Reintentar listado</button>
+    </section>
+  } @else {
     <section class="data-panel">
       <div class="data-panel__header">
         <div class="data-panel__title-group">

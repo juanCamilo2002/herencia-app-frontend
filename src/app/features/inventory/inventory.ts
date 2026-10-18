@@ -1,5 +1,7 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subscription } from 'rxjs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -38,6 +40,11 @@ export class Inventory implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly toast = inject(ToastService);
   private readonly session = inject(AuthSessionService);
+  private readonly destroyRef = inject(DestroyRef);
+  private listRequest?: Subscription;
+  private summaryRequest?: Subscription;
+  protected readonly summaryLoading = signal(true);
+  protected readonly summaryError = signal<string | null>(null);
 
   protected readonly movements = signal<StockMovement[]>([]);
   protected readonly loading = signal(true);
@@ -79,16 +86,18 @@ export class Inventory implements OnInit {
     this.loadMovements();
   }
 
-  private loadMovements() {
+  protected loadMovements() {
+    this.listRequest?.unsubscribe();
     this.loading.set(true);
     this.error.set(null);
 
-    this.inventoryService
+    this.listRequest = this.inventoryService
       .getMovements({
         page: this.pageIndex(),
         size: this.pageSize(),
         sort: 'movementDateTime,desc',
       })
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (page) => {
           this.movements.set(page.content);
@@ -102,10 +111,23 @@ export class Inventory implements OnInit {
       });
   }
 
-  private loadSummary() {
-    this.inventoryService.getSummary().subscribe({
-      next: (summary) => this.summary.set(summary),
-    });
+  protected loadSummary() {
+    this.summaryRequest?.unsubscribe();
+    this.summaryLoading.set(true);
+    this.summaryError.set(null);
+    this.summaryRequest = this.inventoryService
+      .getSummary()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (summary) => {
+          this.summary.set(summary);
+          this.summaryLoading.set(false);
+        },
+        error: () => {
+          this.summaryError.set('No fue posible actualizar las estadísticas.');
+          this.summaryLoading.set(false);
+        },
+      });
   }
 
   protected pageChanged(event: PageEvent) {

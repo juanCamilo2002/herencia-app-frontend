@@ -1,5 +1,7 @@
 import { CurrencyPipe, DecimalPipe } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subscription } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { PageEvent, MatPaginatorModule } from '@angular/material/paginator';
@@ -39,6 +41,11 @@ export class Supplies implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly toast = inject(ToastService);
   private readonly session = inject(AuthSessionService);
+  private readonly destroyRef = inject(DestroyRef);
+  private listRequest?: Subscription;
+  private summaryRequest?: Subscription;
+  protected readonly summaryLoading = signal(true);
+  protected readonly summaryError = signal<string | null>(null);
 
   protected readonly supplies = signal<Supply[]>([]);
   protected readonly loading = signal(true);
@@ -86,15 +93,17 @@ export class Supplies implements OnInit {
   }
 
   protected loadSupplies() {
+    this.listRequest?.unsubscribe();
     this.loading.set(true);
     this.error.set(null);
 
-    this.supplyService
+    this.listRequest = this.supplyService
       .getSupplies({
         page: this.pageIndex(),
         size: this.pageSize(),
         sort: this.sortParam(),
       })
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (page) => {
           this.supplies.set(page.content);
@@ -184,10 +193,23 @@ export class Supplies implements OnInit {
     });
   }
 
-  private loadSummary() {
-    this.supplyService.getSummary().subscribe({
-      next: (summary) => this.summary.set(summary),
-    });
+  protected loadSummary() {
+    this.summaryRequest?.unsubscribe();
+    this.summaryLoading.set(true);
+    this.summaryError.set(null);
+    this.summaryRequest = this.supplyService
+      .getSummary()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (summary) => {
+          this.summary.set(summary);
+          this.summaryLoading.set(false);
+        },
+        error: () => {
+          this.summaryError.set('No fue posible actualizar las estadísticas.');
+          this.summaryLoading.set(false);
+        },
+      });
   }
 
   private deleteSupply(supply: Supply) {

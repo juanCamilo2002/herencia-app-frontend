@@ -1,4 +1,6 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subscription } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -22,17 +24,22 @@ import { AuthSessionService } from '../../core/auth/auth-session.service';
     MatSortModule,
     MatTableModule,
     MetricCard,
-    MatPaginatorModule
+    MatPaginatorModule,
   ],
   selector: 'app-customers',
   styleUrl: './customers.scss',
-  templateUrl: './customers.html'
+  templateUrl: './customers.html',
 })
 export class Customers implements OnInit {
   private readonly customerService = inject(CustomerService);
   private readonly dialog = inject(MatDialog);
   private readonly toast = inject(ToastService);
   private readonly session = inject(AuthSessionService);
+  private readonly destroyRef = inject(DestroyRef);
+  private listRequest?: Subscription;
+  private summaryRequest?: Subscription;
+  protected readonly summaryLoading = signal(true);
+  protected readonly summaryError = signal<string | null>(null);
 
   protected readonly customers = signal<Customer[]>([]);
   protected readonly loading = signal(true);
@@ -61,22 +68,24 @@ export class Customers implements OnInit {
 
   protected readonly customersWithPhone = computed(() => this.summary()?.customersWithPhone ?? 0);
 
-  protected readonly customersWithoutContact = computed(() => this.summary()?.customersWithoutContact ?? 0);
+  protected readonly customersWithoutContact = computed(
+    () => this.summary()?.customersWithoutContact ?? 0,
+  );
 
   protected readonly canCreateCustomer = computed(() =>
-    this.session.hasPermission('customers:create')
+    this.session.hasPermission('customers:create'),
   );
 
   protected readonly canUpdateCustomer = computed(() =>
-    this.session.hasPermission('customers:update')
+    this.session.hasPermission('customers:update'),
   );
 
   protected readonly canDeleteCustomer = computed(() =>
-    this.session.hasPermission('customers:delete')
+    this.session.hasPermission('customers:delete'),
   );
 
-  protected readonly hasCustomerActions = computed(() =>
-    this.canUpdateCustomer() || this.canDeleteCustomer()
+  protected readonly hasCustomerActions = computed(
+    () => this.canUpdateCustomer() || this.canDeleteCustomer(),
   );
 
   ngOnInit(): void {
@@ -85,30 +94,47 @@ export class Customers implements OnInit {
   }
 
   protected loadCustomers() {
+    this.listRequest?.unsubscribe();
     this.loading.set(true);
     this.error.set(null);
 
-    this.customerService.getCustomers({
-      page: this.pageIndex(),
-      size: this.pageSize(),
-      sort: this.sortParam()
-    }).subscribe({
-      next: (page) => {
-        this.customers.set(page.content);
-        this.totalElements.set(page.totalElements);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.error.set('No fue posible cargar los clientes.');
-        this.loading.set(false);
-      }
-    });
+    this.listRequest = this.customerService
+      .getCustomers({
+        page: this.pageIndex(),
+        size: this.pageSize(),
+        sort: this.sortParam(),
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (page) => {
+          this.customers.set(page.content);
+          this.totalElements.set(page.totalElements);
+          this.loading.set(false);
+        },
+        error: () => {
+          this.error.set('No fue posible cargar los clientes.');
+          this.loading.set(false);
+        },
+      });
   }
 
-  private loadSummary() {
-    this.customerService.getSummary().subscribe({
-      next: (summary) => this.summary.set(summary)
-    });
+  protected loadSummary() {
+    this.summaryRequest?.unsubscribe();
+    this.summaryLoading.set(true);
+    this.summaryError.set(null);
+    this.summaryRequest = this.customerService
+      .getSummary()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (summary) => {
+          this.summary.set(summary);
+          this.summaryLoading.set(false);
+        },
+        error: () => {
+          this.summaryError.set('No fue posible actualizar las estadísticas.');
+          this.summaryLoading.set(false);
+        },
+      });
   }
 
   protected sortCustomers(sort: Sort) {
@@ -130,7 +156,7 @@ export class Customers implements OnInit {
       width: '720px',
       maxWidth: 'calc(100vw - 32px)',
       maxHeight: 'calc(100dvh - 32px)',
-      panelClass: 'app-dialog-panel'
+      panelClass: 'app-dialog-panel',
     });
 
     dialogRef.afterClosed().subscribe((created) => {
@@ -173,7 +199,7 @@ export class Customers implements OnInit {
         confirmText: 'Eliminar',
         cancelText: 'Cancelar',
         tone: 'danger',
-      }
+      },
     });
 
     dialogRef.afterClosed().subscribe((confirmed) => {
@@ -192,7 +218,7 @@ export class Customers implements OnInit {
       },
       error: () => {
         this.toast.error('No fue posible eliminar el cliente.');
-      }
+      },
     });
   }
 

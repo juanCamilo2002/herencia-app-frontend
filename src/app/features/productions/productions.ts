@@ -1,5 +1,7 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subscription } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -39,6 +41,11 @@ export class Productions implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly toast = inject(ToastService);
   private readonly session = inject(AuthSessionService);
+  private readonly destroyRef = inject(DestroyRef);
+  private listRequest?: Subscription;
+  private summaryRequest?: Subscription;
+  protected readonly summaryLoading = signal(true);
+  protected readonly summaryError = signal<string | null>(null);
 
   protected readonly productions = signal<Production[]>([]);
   protected readonly loading = signal(true);
@@ -144,16 +151,18 @@ export class Productions implements OnInit {
     return items.map((item) => `${item.quantity} x ${item.supplyName}`).join(', ');
   }
 
-  private loadProductions() {
+  protected loadProductions() {
+    this.listRequest?.unsubscribe();
     this.loading.set(true);
     this.error.set(null);
 
-    this.productionService
+    this.listRequest = this.productionService
       .getProductions({
         page: this.pageIndex(),
         size: this.pageSize(),
         sort: 'productionDateTime,desc',
       })
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (page) => {
           this.productions.set(page.content);
@@ -167,9 +176,22 @@ export class Productions implements OnInit {
       });
   }
 
-  private loadSummary() {
-    this.productionService.getSummary().subscribe({
-      next: (summary) => this.summary.set(summary),
-    });
+  protected loadSummary() {
+    this.summaryRequest?.unsubscribe();
+    this.summaryLoading.set(true);
+    this.summaryError.set(null);
+    this.summaryRequest = this.productionService
+      .getSummary()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (summary) => {
+          this.summary.set(summary);
+          this.summaryLoading.set(false);
+        },
+        error: () => {
+          this.summaryError.set('No fue posible actualizar las estadísticas.');
+          this.summaryLoading.set(false);
+        },
+      });
   }
 }

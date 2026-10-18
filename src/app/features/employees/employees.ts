@@ -1,5 +1,7 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subscription } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -35,6 +37,11 @@ export class Employees implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly toast = inject(ToastService);
   private readonly session = inject(AuthSessionService);
+  private readonly destroyRef = inject(DestroyRef);
+  private listRequest?: Subscription;
+  private summaryRequest?: Subscription;
+  protected readonly summaryLoading = signal(true);
+  protected readonly summaryError = signal<string | null>(null);
 
   protected readonly employees = signal<Employee[]>([]);
   protected readonly loading = signal(true);
@@ -61,22 +68,24 @@ export class Employees implements OnInit {
   protected readonly totalEmployees = computed(() => this.summary()?.totalEmployees ?? 0);
   protected readonly employeesWithEmail = computed(() => this.summary()?.employeesWithEmail ?? 0);
   protected readonly employeesWithPhone = computed(() => this.summary()?.employeesWithPhone ?? 0);
-  protected readonly employeesWithoutContact = computed(() => this.summary()?.employeesWithoutContact ?? 0);
+  protected readonly employeesWithoutContact = computed(
+    () => this.summary()?.employeesWithoutContact ?? 0,
+  );
 
   protected readonly canCreateEmployee = computed(() =>
-    this.session.hasPermission('employees:create')
+    this.session.hasPermission('employees:create'),
   );
 
   protected readonly canUpdateEmployee = computed(() =>
-    this.session.hasPermission('employees:update')
+    this.session.hasPermission('employees:update'),
   );
 
   protected readonly canDisableEmployee = computed(() =>
-    this.session.hasPermission('employees:disable')
+    this.session.hasPermission('employees:disable'),
   );
 
-  protected readonly hasEmployeeActions = computed(() =>
-    this.canUpdateEmployee() || this.canDisableEmployee()
+  protected readonly hasEmployeeActions = computed(
+    () => this.canUpdateEmployee() || this.canDisableEmployee(),
   );
 
   ngOnInit(): void {
@@ -85,24 +94,28 @@ export class Employees implements OnInit {
   }
 
   protected loadEmployees() {
+    this.listRequest?.unsubscribe();
     this.loading.set(true);
     this.error.set(null);
 
-    this.employeeService.getEmployees({
-      page: this.pageIndex(),
-      size: this.pageSize(),
-      sort: this.sortParam(),
-    }).subscribe({
-      next: (page) => {
-        this.employees.set(page.content);
-        this.totalElements.set(page.totalElements);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.error.set('No fue posible cargar los empleados.');
-        this.loading.set(false);
-      },
-    });
+    this.listRequest = this.employeeService
+      .getEmployees({
+        page: this.pageIndex(),
+        size: this.pageSize(),
+        sort: this.sortParam(),
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (page) => {
+          this.employees.set(page.content);
+          this.totalElements.set(page.totalElements);
+          this.loading.set(false);
+        },
+        error: () => {
+          this.error.set('No fue posible cargar los empleados.');
+          this.loading.set(false);
+        },
+      });
   }
 
   protected sortEmployees(sort: Sort) {
@@ -177,10 +190,23 @@ export class Employees implements OnInit {
     });
   }
 
-  private loadSummary() {
-    this.employeeService.getSummary().subscribe({
-      next: (summary) => this.summary.set(summary),
-    });
+  protected loadSummary() {
+    this.summaryRequest?.unsubscribe();
+    this.summaryLoading.set(true);
+    this.summaryError.set(null);
+    this.summaryRequest = this.employeeService
+      .getSummary()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (summary) => {
+          this.summary.set(summary);
+          this.summaryLoading.set(false);
+        },
+        error: () => {
+          this.summaryError.set('No fue posible actualizar las estadísticas.');
+          this.summaryLoading.set(false);
+        },
+      });
   }
 
   private disableEmployee(employee: Employee) {
