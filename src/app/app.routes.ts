@@ -118,6 +118,20 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/productions/productions').then((m) => m.Productions),
       },
+      {
+        path: 'suppliers',
+        canActivate: [permissionGuard],
+        data: { permission: 'suppliers:read' },
+        loadComponent: () =>
+          import('./features/suppliers/suppliers').then((module) => module.Suppliers),
+      },
+      {
+        path: 'purchases',
+        canActivate: [permissionGuard],
+        data: { permission: 'purchases:read' },
+        loadComponent: () =>
+          import('./features/purchases/purchases').then((module) => module.Purchases),
+      },
     ],
   },
   {

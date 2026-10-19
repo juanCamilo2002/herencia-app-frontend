@@ -29,9 +29,7 @@ export const xsrfInterceptor: HttpInterceptorFn = (request, next) => {
 };
 
 function getCookie(name: string) {
-  const cookie = document.cookie
-    .split('; ')
-    .find((row) => row.startsWith(`${name}=`));
+  const cookie = document.cookie.split('; ').find((row) => row.startsWith(`${name}=`));
 
   return cookie ? decodeURIComponent(cookie.split('=')[1]) : null;
 }

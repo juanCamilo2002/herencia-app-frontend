@@ -1,0 +1,183 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <span class="page__eyebrow">Abastecimiento</span>
+      <h1 class="page__title">Compras</h1>
+      <p class="page__subtitle">Pide productos e insumos y registra su recepción completa.</p>
+    </div>
+    @if (canCreate()) {
+      <button mat-flat-button type="button" [disabled]="dialogOpen()" (click)="create()">
+        <mat-icon>add</mat-icon>Nueva compra
+      </button>
+    }
+  </header>
+  @if (summary(); as data) {
+    <section class="data-stats" aria-label="Estadísticas globales de compras">
+      <app-metric-card
+        label="Compras registradas"
+        [value]="data.totalPurchases"
+        icon="shopping_cart"
+        tone="primary"
+      /><app-metric-card
+        label="Pedidos por recibir"
+        [value]="data.orderedCount"
+        icon="local_shipping"
+        tone="warning"
+      /><app-metric-card
+        label="Valor por recibir"
+        [value]="data.orderedAmount | purchaseMoney"
+        hint="No representa deuda con proveedores"
+        icon="inventory_2"
+        tone="warning"
+      /><app-metric-card
+        label="Compras recibidas"
+        [value]="data.receivedAmount | purchaseMoney"
+        hint="Valor de artículos recibidos"
+        icon="task_alt"
+        tone="success"
+      />
+    </section>
+  } @else if (summaryLoading()) {
+    <p role="status">Cargando estadísticas...</p>
+  }
+  @if (summaryError()) {
+    <div class="data-panel data-panel--error" role="alert">
+      {{ summaryError()
+      }}<button mat-button type="button" [disabled]="summaryLoading()" (click)="loadSummary()">
+        Reintentar estadísticas
+      </button>
+    </div>
+  }
+  <section class="data-panel" [attr.aria-busy]="loading()">
+    <div class="data-panel__header">
+      <div>
+        <h2>Pedidos y recepciones</h2>
+        <p>La recepción suma mercancía; guardar un pedido no modifica el inventario.</p>
+      </div>
+      <button mat-button type="button" [disabled]="loading() || dialogOpen()" (click)="loadRows()">
+        Actualizar listado
+      </button>
+    </div>
+    <form class="purchases__filters" [formGroup]="filters" (ngSubmit)="applyFilters()">
+      <mat-form-field appearance="outline"
+        ><mat-label>Proveedor o referencia</mat-label
+        ><input matInput formControlName="search" maxlength="160" /></mat-form-field
+      ><mat-form-field appearance="outline"
+        ><mat-label>Estado</mat-label
+        ><mat-select formControlName="status"
+          ><mat-option [value]="null">Todos</mat-option>
+          @for (status of statuses; track status.value) {
+            <mat-option [value]="status.value">{{ status.label }}</mat-option>
+          }
+        </mat-select></mat-form-field
+      ><button mat-flat-button type="submit" [disabled]="loading() || dialogOpen()">Buscar</button
+      ><button
+        mat-button
+        type="button"
+        [disabled]="loading() || dialogOpen()"
+        (click)="clearFilters()"
+      >
+        Limpiar
+      </button>
+    </form>
+    @if (loading()) {
+      <p role="status">Cargando compras...</p>
+    } @else if (error()) {
+      <div role="alert">
+        <p>{{ error() }}</p>
+        <button mat-button type="button" (click)="loadRows()">Reintentar listado</button>
+      </div>
+    } @else if (!rows().length) {
+      <div class="empty-state">
+        <mat-icon>shopping_cart</mat-icon>
+        <h3>No hay compras para mostrar</h3>
+        <p>Registra una compra o revisa los filtros.</p>
+      </div>
+    } @else {
+      <div class="data-table data-table--md purchases__table">
+        <table mat-table [dataSource]="rows()">
+          <ng-container matColumnDef="supplier"
+            ><th mat-header-cell *matHeaderCellDef>Proveedor</th>
+            <td mat-cell *matCellDef="let row">
+              <strong>{{ row.supplierName }}</strong
+              ><small>#{{ row.id.slice(0, 8).toUpperCase() }}</small>
+            </td></ng-container
+          >
+          <ng-container matColumnDef="date"
+            ><th mat-header-cell *matHeaderCellDef>Fecha de compra</th>
+            <td mat-cell *matCellDef="let row">
+              {{ row.purchaseDateTime | date: 'dd/MM/yyyy'
+              }}<small>{{ row.purchaseDateTime | date: 'HH:mm' }}</small>
+            </td></ng-container
+          >
+          <ng-container matColumnDef="reference"
+            ><th mat-header-cell *matHeaderCellDef>Referencia</th>
+            <td mat-cell *matCellDef="let row">
+              {{ row.reference || 'Sin referencia' }}
+            </td></ng-container
+          >
+          <ng-container matColumnDef="total"
+            ><th mat-header-cell *matHeaderCellDef>Total</th>
+            <td mat-cell *matCellDef="let row">
+              {{ row.total | purchaseMoney }}
+            </td></ng-container
+          >
+          <ng-container matColumnDef="status"
+            ><th mat-header-cell *matHeaderCellDef>Estado</th>
+            <td mat-cell *matCellDef="let row">
+              <app-status-badge
+                [label]="statusLabel(row.status)"
+                [tone]="statusTone(row.status)"
+                size="small"
+              /></td
+          ></ng-container>
+          <ng-container matColumnDef="actions"
+            ><th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let row">
+              <button mat-button type="button" [disabled]="dialogOpen()" (click)="detail(row.id)">
+                Ver detalle
+              </button>
+            </td></ng-container
+          >
+          <tr mat-header-row *matHeaderRowDef="columns"></tr>
+          <tr mat-row *matRowDef="let row; columns: columns"></tr>
+        </table>
+      </div>
+      <div class="data-mobile-list">
+        @for (row of rows(); track row.id) {
+          <article class="data-card">
+            <div class="data-card__header">
+              <strong>{{ row.supplierName }}</strong
+              ><app-status-badge
+                [label]="statusLabel(row.status)"
+                [tone]="statusTone(row.status)"
+                size="small"
+              />
+            </div>
+            <p>
+              {{ row.purchaseDateTime | date: 'dd/MM/yyyy HH:mm' }} ·
+              {{ row.reference || 'Sin referencia' }}
+            </p>
+            <strong>{{ row.total | purchaseMoney }}</strong>
+            <div>
+              <button mat-button type="button" [disabled]="dialogOpen()" (click)="detail(row.id)">
+                Ver detalle
+              </button>
+            </div>
+          </article>
+        }
+      </div>
+    }
+    @if (totalElements() > 0) {
+      <mat-paginator
+        [length]="totalElements()"
+        [pageIndex]="pageIndex()"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="[10, 20, 50]"
+        [disabled]="loading() || dialogOpen() || !!error()"
+        (page)="pageChanged($event)"
+        showFirstLastButtons
+      />
+    }
+  </section>
+</section>

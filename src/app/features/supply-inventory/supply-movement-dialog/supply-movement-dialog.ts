@@ -14,7 +14,10 @@ import { MatSelectModule } from '@angular/material/select';
 import { ToastService } from '../../../shared/services/toast.service';
 import { Supply } from '../../supplies/data-access/supply.model';
 import { SupplyService } from '../../supplies/data-access/supply.service';
-import { CreateSupplyMovementRequest, SupplyMovementType } from '../data-access/supply-inventory.model';
+import {
+  CreateSupplyMovementRequest,
+  SupplyMovementType,
+} from '../data-access/supply-inventory.model';
 import { SupplyInventoryService } from '../data-access/supply-inventory.service';
 import { supplyUnitLabel } from '../../supplies/data-access/supply-labels';
 
@@ -54,10 +57,11 @@ export class SupplyMovementDialog implements OnInit {
     type: ['INBOUND' as SupplyMovementType, [Validators.required]],
     quantity: [1, [Validators.required, Validators.min(0)]],
     movementDate: this.formBuilder.control<Date | null>(new Date(), [Validators.required]),
-    movementTime: this.formBuilder.nonNullable.control(this.currentTimeOption(), [Validators.required]),
+    movementTime: this.formBuilder.nonNullable.control(this.currentTimeOption(), [
+      Validators.required,
+    ]),
     reason: ['', [Validators.maxLength(255)]],
   });
-
 
   protected readonly selectedType = toSignal(this.form.controls.type.valueChanges, {
     initialValue: this.form.controls.type.value,
@@ -71,8 +75,8 @@ export class SupplyMovementDialog implements OnInit {
     initialValue: this.form.controls.quantity.value,
   });
 
-  protected readonly selectedSupply = computed(() =>
-    this.supplies().find((supply) => supply.id === this.selectedSupplyId()) ?? null
+  protected readonly selectedSupply = computed(
+    () => this.supplies().find((supply) => supply.id === this.selectedSupplyId()) ?? null,
   );
 
   protected readonly selectedReason = toSignal(this.form.controls.reason.valueChanges, {
@@ -197,8 +201,6 @@ export class SupplyMovementDialog implements OnInit {
         return 'Cantidad perdida, dañada o no utilizable.';
     }
   }
-
-
 
   private loadSupplies() {
     this.loadingSupplies.set(true);

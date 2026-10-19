@@ -108,6 +108,20 @@ export const APP_NAVIGATION_ENTRIES: AppNavigationEntry[] = [
         route: '/productions',
         permission: 'productions:read',
       },
+      {
+        type: 'item',
+        label: 'Proveedores',
+        icon: 'local_shipping',
+        route: '/suppliers',
+        permission: 'suppliers:read',
+      },
+      {
+        type: 'item',
+        label: 'Compras',
+        icon: 'shopping_cart',
+        route: '/purchases',
+        permission: 'purchases:read',
+      },
     ],
   },
   {

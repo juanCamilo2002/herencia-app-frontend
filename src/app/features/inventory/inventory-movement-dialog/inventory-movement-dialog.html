@@ -13,42 +13,42 @@
 
   <form class="app-form-dialog__form" [formGroup]="form" (ngSubmit)="submit()">
     @if (error()) {
-    <p class="app-form-dialog__error">{{ error() }}</p>
+      <p class="app-form-dialog__error">{{ error() }}</p>
     }
 
     @if (selectedProduct(); as product) {
-    <aside class="app-form-dialog__summary movement-dialog__stock-summary">
-      <div>
-        <span>Producto seleccionado</span>
-        <strong>{{ product.name }}</strong>
-      </div>
+      <aside class="app-form-dialog__summary movement-dialog__stock-summary">
+        <div>
+          <span>Producto seleccionado</span>
+          <strong>{{ product.name }}</strong>
+        </div>
 
-      <div>
-        <span>Stock actual</span>
-        <strong>{{ product.stock }}</strong>
-      </div>
+        <div>
+          <span>Stock actual</span>
+          <strong>{{ product.stock }}</strong>
+        </div>
 
-      @if (projectedStock() !== null) {
-      <div>
-        <span>Stock resultante</span>
-        <strong>{{ projectedStock() }}</strong>
-      </div>
-      }
-    </aside>
+        @if (projectedStock() !== null) {
+          <div>
+            <span>Stock resultante</span>
+            <strong>{{ projectedStock() }}</strong>
+          </div>
+        }
+      </aside>
     }
 
     <mat-form-field appearance="outline" class="app-form-dialog__field--full">
       <mat-label>Producto</mat-label>
       <mat-select formControlName="productId" [disabled]="loadingProducts()">
         @for (product of products(); track product.id) {
-        <mat-option [value]="product.id">
-          {{ product.name }} - Stock actual: {{ product.stock }}
-        </mat-option>
+          <mat-option [value]="product.id">
+            {{ product.name }} - Stock actual: {{ product.stock }}
+          </mat-option>
         }
       </mat-select>
 
       @if (hasError('productId', 'required')) {
-      <mat-error>Selecciona un producto.</mat-error>
+        <mat-error>Selecciona un producto.</mat-error>
       }
     </mat-form-field>
 
@@ -68,16 +68,18 @@
       <mat-hint>{{ quantityHint() }}</mat-hint>
 
       @if (hasError('quantity', 'required')) {
-      <mat-error>La cantidad es obligatoria.</mat-error>
+        <mat-error>La cantidad es obligatoria.</mat-error>
       }
 
       @if (hasError('quantity', 'min')) {
-      <mat-error>No puede ser negativa.</mat-error>
+        <mat-error>No puede ser negativa.</mat-error>
       }
     </mat-form-field>
 
     @if (movementValidationError(); as validationError) {
-    <p class="app-form-dialog__inline-error movement-dialog__inline-error">{{ validationError }}</p>
+      <p class="app-form-dialog__inline-error movement-dialog__inline-error">
+        {{ validationError }}
+      </p>
     }
 
     <mat-form-field appearance="outline">
@@ -87,7 +89,7 @@
       <mat-datepicker #movementDatePicker />
 
       @if (hasError('movementDate', 'required')) {
-      <mat-error>La fecha del movimiento es obligatoria.</mat-error>
+        <mat-error>La fecha del movimiento es obligatoria.</mat-error>
       }
     </mat-form-field>
 
@@ -96,7 +98,7 @@
       <input matInput type="time" formControlName="movementTime" />
 
       @if (hasError('movementTime', 'required')) {
-      <mat-error>La hora del movimiento es obligatoria.</mat-error>
+        <mat-error>La hora del movimiento es obligatoria.</mat-error>
       }
     </mat-form-field>
 
@@ -105,21 +107,30 @@
       <textarea matInput formControlName="reason" rows="3"></textarea>
 
       @if (hasError('reason', 'maxlength')) {
-      <mat-error>Máximo 255 caracteres.</mat-error>
+        <mat-error>Máximo 255 caracteres.</mat-error>
       }
     </mat-form-field>
 
+    <div class="app-form-dialog__summary">
+      <p>
+        Si aumentas existencias manualmente, su costo promedio quedará pendiente de definir. Para
+        registrar una compra con costo, utiliza Compras.
+      </p>
+    </div>
     <footer class="app-form-dialog__actions">
-      <button mat-button type="button" [disabled]="saving()" (click)="close()">
-        Cancelar
-      </button>
+      <button mat-button type="button" [disabled]="saving()" (click)="close()">Cancelar</button>
 
-      <button mat-flat-button type="submit"
-        [disabled]="saving() || loadingProducts() || form.invalid || movementValidationError() != null">
+      <button
+        mat-flat-button
+        type="submit"
+        [disabled]="
+          saving() || loadingProducts() || form.invalid || movementValidationError() != null
+        "
+      >
         @if (saving()) {
-        Guardando...
+          Guardando...
         } @else {
-        Registrar movimiento
+          Registrar movimiento
         }
       </button>
     </footer>

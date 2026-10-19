@@ -5,8 +5,6 @@ import { AuthUser } from '../../features/auth/data-access/auth.model';
 import { AuthSessionService } from '../auth/auth-session.service';
 import { APP_NAVIGATION_ITEMS } from '../navigation/app-navigation';
 
-
-
 export const permissionGuard: CanActivateFn = (route, state) => {
   const session = inject(AuthSessionService);
   const router = inject(Router);

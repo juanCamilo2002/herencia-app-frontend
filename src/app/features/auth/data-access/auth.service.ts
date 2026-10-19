@@ -8,8 +8,6 @@ import {
   ResetPasswordRequest,
 } from './auth.model';
 
-
-
 @Injectable({
   providedIn: 'root',
 })

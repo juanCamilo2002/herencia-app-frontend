@@ -1,0 +1,107 @@
+<section class="app-form-dialog">
+  <header class="app-form-dialog__header">
+    <div>
+      <span>Proveedores</span>
+      <h2>{{ isEdit ? 'Editar proveedor' : 'Nuevo proveedor' }}</h2>
+      <p>
+        {{
+          isEdit
+            ? 'Actualiza la identificación y los datos de contacto.'
+            : 'Registra a quién compras productos o insumos.'
+        }}
+      </p>
+    </div>
+
+    <button
+      mat-icon-button
+      type="button"
+      aria-label="Cerrar proveedor"
+      [disabled]="saving()"
+      (click)="close()"
+    >
+      <mat-icon>close</mat-icon>
+    </button>
+  </header>
+
+  <form class="app-form-dialog__form" [formGroup]="form" (ngSubmit)="submit()">
+    @if (supplier && !supplier.active) {
+      <div class="app-form-dialog__status">
+        <p>Este proveedor está inactivo. Editar sus datos no lo reactiva.</p>
+      </div>
+    }
+
+    <mat-form-field appearance="outline" class="app-form-dialog__field--full">
+      <mat-label>Nombre o razón social</mat-label>
+      <input matInput formControlName="name" maxlength="160" autocomplete="organization" />
+
+      @if (hasError('name', 'required') || hasError('name', 'pattern')) {
+        <mat-error>El nombre es obligatorio.</mat-error>
+      }
+
+      @if (hasError('name', 'maxlength')) {
+        <mat-error>Máximo 160 caracteres.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Identificación (opcional)</mat-label>
+      <input matInput formControlName="document" maxlength="40" autocomplete="off" />
+      <mat-hint>NIT o documento del proveedor.</mat-hint>
+
+      @if (hasError('document', 'maxlength')) {
+        <mat-error>Máximo 40 caracteres.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Teléfono (opcional)</mat-label>
+      <input matInput type="tel" formControlName="phone" maxlength="40" autocomplete="tel" />
+
+      @if (hasError('phone', 'maxlength')) {
+        <mat-error>Máximo 40 caracteres.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="app-form-dialog__field--full">
+      <mat-label>Correo electrónico (opcional)</mat-label>
+      <input matInput type="email" formControlName="email" maxlength="120" autocomplete="email" />
+
+      @if (hasError('email', 'email')) {
+        <mat-error>Escribe un correo válido.</mat-error>
+      }
+
+      @if (hasError('email', 'maxlength')) {
+        <mat-error>Máximo 120 caracteres.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="app-form-dialog__field--full">
+      <mat-label>Dirección (opcional)</mat-label>
+      <textarea
+        matInput
+        formControlName="address"
+        rows="2"
+        maxlength="255"
+        autocomplete="street-address"
+      ></textarea>
+
+      @if (hasError('address', 'maxlength')) {
+        <mat-error>Máximo 255 caracteres.</mat-error>
+      }
+    </mat-form-field>
+
+    @if (error()) {
+      <p class="app-form-dialog__error" role="alert">
+        {{ error() }}
+      </p>
+    }
+
+    <footer class="app-form-dialog__actions">
+      <button mat-button type="button" [disabled]="saving()" (click)="close()">Cancelar</button>
+
+      <button mat-flat-button type="submit" [disabled]="saving()">
+        {{ saving() ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Crear proveedor' }}
+      </button>
+    </footer>
+  </form>
+</section>

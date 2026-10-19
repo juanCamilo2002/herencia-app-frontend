@@ -46,6 +46,8 @@ export function supplyMovementSourceLabel(sourceType: SupplyMovementSourceType |
       return 'Manual';
     case 'PRODUCTION':
       return 'Producción';
+    case 'PURCHASE':
+      return 'Compra';
     default:
       return 'Sin origen';
   }

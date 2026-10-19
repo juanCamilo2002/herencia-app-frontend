@@ -56,9 +56,7 @@
     }
 
     <footer class="app-form-dialog__actions">
-      <button mat-button type="button" [disabled]="saving()" (click)="close()">
-        Cancelar
-      </button>
+      <button mat-button type="button" [disabled]="saving()" (click)="close()">Cancelar</button>
 
       <button mat-flat-button type="button" [disabled]="saving() || loading()" (click)="submit()">
         @if (saving()) {

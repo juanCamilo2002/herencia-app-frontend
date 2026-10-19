@@ -2,7 +2,7 @@
   <header class="app-form-dialog__header">
     <div>
       <span>Clientes</span>
-      <h2>{{ isEdit ? 'Editar cliente' :  'Nuevo cliente'}}</h2>
+      <h2>{{ isEdit ? 'Editar cliente' : 'Nuevo cliente' }}</h2>
       <p>
         {{
           isEdit
@@ -76,9 +76,7 @@
     }
 
     <footer class="app-form-dialog__actions">
-      <button mat-button type="button" [disabled]="saving()" (click)="close()">
-        Cancelar
-      </button>
+      <button mat-button type="button" [disabled]="saving()" (click)="close()">Cancelar</button>
 
       <button mat-flat-button type="submit" [disabled]="saving()">
         @if (saving()) {

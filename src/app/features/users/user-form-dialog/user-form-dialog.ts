@@ -10,7 +10,12 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { ToastService } from '../../../shared/services/toast.service';
 import { strongPasswordValidator } from '../../../shared/validators/password.validator';
-import { CreateUserRequest, UpdateUserRequest, User, UserRoleOption } from '../data-access/user.model';
+import {
+  CreateUserRequest,
+  UpdateUserRequest,
+  User,
+  UserRoleOption,
+} from '../data-access/user.model';
 import { UserService } from '../data-access/user.service';
 
 export type UserFormDialogData = {
@@ -48,7 +53,10 @@ export class UserFormDialog implements OnInit {
 
   protected readonly form = this.formBuilder.nonNullable.group({
     name: [this.user?.name ?? '', [Validators.required, Validators.maxLength(120)]],
-    email: [this.user?.email ?? '', [Validators.required, Validators.email, Validators.maxLength(160)]],
+    email: [
+      this.user?.email ?? '',
+      [Validators.required, Validators.email, Validators.maxLength(160)],
+    ],
     password: ['', this.isEdit ? [] : [Validators.required, strongPasswordValidator]],
     roleId: [this.user?.role.id ?? '', [Validators.required]],
     active: [this.user?.active ?? true],

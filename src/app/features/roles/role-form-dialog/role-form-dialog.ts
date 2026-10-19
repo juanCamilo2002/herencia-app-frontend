@@ -41,7 +41,6 @@ export class RoleFormDialog {
   protected readonly saving = signal(false);
   protected readonly error = signal<string | null>(null);
 
-
   protected readonly activeToggleDisabled =
     this.role?.active === true && this.role.canDisable !== true;
 
@@ -179,5 +178,4 @@ export class RoleFormDialog {
         return fallback;
     }
   }
-
 }

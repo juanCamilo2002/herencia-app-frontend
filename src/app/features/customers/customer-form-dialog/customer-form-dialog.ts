@@ -6,7 +6,11 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { ToastService } from '../../../shared/services/toast.service';
-import { CreateCustomerRequest, Customer, UpdateCustomerRequest } from '../data-access/customer.model';
+import {
+  CreateCustomerRequest,
+  Customer,
+  UpdateCustomerRequest,
+} from '../data-access/customer.model';
 import { CustomerService } from '../data-access/customer.service';
 
 export type CustomerFormDialogData = {
@@ -31,7 +35,9 @@ export class CustomerFormDialog {
   private readonly customerService = inject(CustomerService);
   private readonly toast = inject(ToastService);
   private readonly dialogRef = inject(MatDialogRef<CustomerFormDialog>);
-  private readonly data = inject<CustomerFormDialogData | null>(MAT_DIALOG_DATA, { optional: true });
+  private readonly data = inject<CustomerFormDialogData | null>(MAT_DIALOG_DATA, {
+    optional: true,
+  });
 
   protected readonly customer = this.data?.customer ?? null;
   protected readonly isEdit = this.customer != null;

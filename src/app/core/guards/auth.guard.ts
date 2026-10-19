@@ -20,7 +20,5 @@ export const authGuard: CanActivateFn = (_, state) => {
     return session.isAuthenticated() ? true : loginTree();
   }
 
-  return session.initialize().pipe(
-    map((user) => (user ? true : loginTree())),
-  );
+  return session.initialize().pipe(map((user) => (user ? true : loginTree())));
 };

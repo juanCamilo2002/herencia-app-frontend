@@ -23,11 +23,11 @@
       <input matInput formControlName="name" autocomplete="off" />
 
       @if (hasError('name', 'required')) {
-      <mat-error>El nombre es obligatorio.</mat-error>
+        <mat-error>El nombre es obligatorio.</mat-error>
       }
 
       @if (hasError('name', 'maxlength')) {
-      <mat-error>Máximo 160 caracteres.</mat-error>
+        <mat-error>Máximo 160 caracteres.</mat-error>
       }
     </mat-form-field>
 
@@ -36,7 +36,7 @@
       <input matInput formControlName="document" autocomplete="off" />
 
       @if (hasError('document', 'maxlength')) {
-      <mat-error>Máximo 40 caracteres.</mat-error>
+        <mat-error>Máximo 40 caracteres.</mat-error>
       }
     </mat-form-field>
 
@@ -45,7 +45,7 @@
       <input matInput formControlName="phone" autocomplete="off" />
 
       @if (hasError('phone', 'maxlength')) {
-      <mat-error>Máximo 40 caracteres.</mat-error>
+        <mat-error>Máximo 40 caracteres.</mat-error>
       }
     </mat-form-field>
 
@@ -54,11 +54,11 @@
       <input matInput formControlName="email" autocomplete="off" />
 
       @if (hasError('email', 'email')) {
-      <mat-error>Ingresa un email válido.</mat-error>
+        <mat-error>Ingresa un email válido.</mat-error>
       }
 
       @if (hasError('email', 'maxlength')) {
-      <mat-error>Máximo 120 caracteres.</mat-error>
+        <mat-error>Máximo 120 caracteres.</mat-error>
       }
     </mat-form-field>
 
@@ -67,7 +67,7 @@
       <input matInput formControlName="position" autocomplete="off" />
 
       @if (hasError('position', 'maxlength')) {
-      <mat-error>Máximo 120 caracteres.</mat-error>
+        <mat-error>Máximo 120 caracteres.</mat-error>
       }
     </mat-form-field>
 
@@ -79,19 +79,17 @@
     </mat-form-field>
 
     @if (error()) {
-    <p class="app-form-dialog__error">{{ error() }}</p>
+      <p class="app-form-dialog__error">{{ error() }}</p>
     }
 
     <footer class="app-form-dialog__actions">
-      <button mat-button type="button" [disabled]="saving()" (click)="close()">
-        Cancelar
-      </button>
+      <button mat-button type="button" [disabled]="saving()" (click)="close()">Cancelar</button>
 
       <button mat-flat-button type="submit" [disabled]="saving()">
         @if (saving()) {
-        Guardando...
+          Guardando...
         } @else {
-        {{ isEdit ? 'Guardar cambios' : 'Crear empleado' }}
+          {{ isEdit ? 'Guardar cambios' : 'Crear empleado' }}
         }
       </button>
     </footer>

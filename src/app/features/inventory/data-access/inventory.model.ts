@@ -6,29 +6,29 @@ export type InventorySummary = {
   lossMovements: number;
 };
 
-export type StockMovementType = 'INBOUND'| 'OUTBOUND' | 'ADJUSTMENT' | 'LOSS';
+export type StockMovementType = 'INBOUND' | 'OUTBOUND' | 'ADJUSTMENT' | 'LOSS';
 
-export type StockMovementSourceType = 'MANUAL'| 'SALE' | 'PRODUCTION';
+export type StockMovementSourceType = 'MANUAL' | 'SALE' | 'PRODUCTION' | 'PURCHASE';
 
 export type StockMovement = {
-    id: string;
-    productId: string;
-    productName: string;
-    type: StockMovementType,
-    quantity: number;
-    previousStock: number;
-    newStock: number;
-    reason: string | null;
-    sourceType: StockMovementSourceType | null;
-    sourceId: string | null;
-    movementDateTime: string;
-    createdAt: string;
-}
+  id: string;
+  productId: string;
+  productName: string;
+  type: StockMovementType;
+  quantity: number;
+  previousStock: number;
+  newStock: number;
+  reason: string | null;
+  sourceType: StockMovementSourceType | null;
+  sourceId: string | null;
+  movementDateTime: string;
+  createdAt: string;
+};
 
 export type CreateStockMovementRequest = {
-    productId: string;
-    type: StockMovementType;
-    quantity: number;
-    movementDateTime: string;
-    reason: string | null;
-}
+  productId: string;
+  type: StockMovementType;
+  quantity: number;
+  movementDateTime: string;
+  reason: string | null;
+};

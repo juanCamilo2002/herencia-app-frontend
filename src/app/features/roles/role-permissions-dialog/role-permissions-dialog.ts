@@ -14,13 +14,7 @@ export type RolePermissionsDialogData = {
 };
 
 @Component({
-  imports: [
-    FormsModule,
-    MatButtonModule,
-    MatCheckboxModule,
-    MatDialogModule,
-    MatIconModule,
-  ],
+  imports: [FormsModule, MatButtonModule, MatCheckboxModule, MatDialogModule, MatIconModule],
   selector: 'app-role-permissions-dialog',
   styleUrl: './role-permissions-dialog.scss',
   templateUrl: './role-permissions-dialog.html',
@@ -59,7 +53,10 @@ export class RolePermissionsDialog implements OnInit {
   }
 
   protected isSectionChecked(section: PermissionCatalogSection) {
-    return section.permissions.length > 0 && this.sectionSelectedCount(section) === section.permissions.length;
+    return (
+      section.permissions.length > 0 &&
+      this.sectionSelectedCount(section) === section.permissions.length
+    );
   }
 
   protected isSectionIndeterminate(section: PermissionCatalogSection) {
@@ -97,20 +94,22 @@ export class RolePermissionsDialog implements OnInit {
     this.saving.set(true);
     this.error.set(null);
 
-    this.roleService.updatePermissions(this.role.id, {
-      permissionIds: [...this.selectedPermissionIds()],
-    }).subscribe({
-      next: () => {
-        this.saving.set(false);
-        this.dialogRef.close(true);
-      },
-      error: (error) => {
-        const message = this.resolvePermissionError(error);
-        this.error.set(message);
-        this.toast.error(message);
-        this.saving.set(false);
-      },
-    });
+    this.roleService
+      .updatePermissions(this.role.id, {
+        permissionIds: [...this.selectedPermissionIds()],
+      })
+      .subscribe({
+        next: () => {
+          this.saving.set(false);
+          this.dialogRef.close(true);
+        },
+        error: (error) => {
+          const message = this.resolvePermissionError(error);
+          this.error.set(message);
+          this.toast.error(message);
+          this.saving.set(false);
+        },
+      });
   }
 
   private loadCatalog() {

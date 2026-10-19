@@ -1,6 +1,16 @@
 import { isPlatformBrowser } from '@angular/common';
 import { inject, Injectable, PLATFORM_ID, computed, signal } from '@angular/core';
-import { Observable, catchError, finalize, map, of, shareReplay, switchMap, tap, throwError } from 'rxjs';
+import {
+  Observable,
+  catchError,
+  finalize,
+  map,
+  of,
+  shareReplay,
+  switchMap,
+  tap,
+  throwError,
+} from 'rxjs';
 import { AuthUser, LoginRequest } from '../../features/auth/data-access/auth.model';
 import { AuthService } from '../../features/auth/data-access/auth.service';
 

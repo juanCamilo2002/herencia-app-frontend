@@ -37,7 +37,9 @@ export class Sidebar {
         return entries;
       }
 
-      const visibleItems = entry.items.filter((item) => this.session.hasPermission(item.permission));
+      const visibleItems = entry.items.filter((item) =>
+        this.session.hasPermission(item.permission),
+      );
 
       if (visibleItems.length > 0) {
         entries.push({
@@ -47,14 +49,17 @@ export class Sidebar {
       }
 
       return entries;
-    }, [])
+    }, []),
   );
 
   protected readonly activeGroupId = computed(() => {
     const url = this.currentUrl();
 
     for (const entry of this.visibleEntries()) {
-      if (entry.type === 'group' && entry.items.some((item) => this.isActiveRoute(url, item.route))) {
+      if (
+        entry.type === 'group' &&
+        entry.items.some((item) => this.isActiveRoute(url, item.route))
+      ) {
         return entry.id;
       }
     }
@@ -66,7 +71,7 @@ export class Sidebar {
     this.router.events
       .pipe(
         filter((event): event is NavigationEnd => event instanceof NavigationEnd),
-        takeUntilDestroyed()
+        takeUntilDestroyed(),
       )
       .subscribe((event) => {
         this.currentUrl.set(event.urlAfterRedirects);
@@ -80,7 +85,6 @@ export class Sidebar {
   protected isGroupOpen(id: string) {
     return this.openGroups().has(id) || this.activeGroupId() === id;
   }
-
 
   protected toggleGroup(id: string) {
     this.openGroups.update((groups) => {

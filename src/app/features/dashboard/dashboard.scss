@@ -77,7 +77,7 @@
   font-weight: 700;
 }
 
-.data-list__content>div>span {
+.data-list__content > div > span {
   display: block;
   margin-top: 4px;
   color: var(--color-muted);
@@ -85,7 +85,6 @@
 }
 
 @media (max-width: 1100px) {
-
   .stats-grid,
   .dashboard-grid,
   .data-list--columns {
@@ -94,7 +93,6 @@
 }
 
 @media (max-width: 720px) {
-
   .stats-grid,
   .dashboard-grid,
   .data-list--columns {

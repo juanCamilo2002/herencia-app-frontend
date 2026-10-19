@@ -1,0 +1,103 @@
+:host {
+  display: block;
+}
+.purchase-detail {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 24px;
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+.purchase-detail h3 {
+  font-size: 16px;
+  margin: 20px 0 12px;
+}
+.purchase-detail__heading,
+.purchase-detail__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.purchase-detail__total {
+  font-size: 26px;
+}
+.purchase-detail__metadata {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 16px 0 0;
+}
+.purchase-detail dt,
+.purchase-detail__muted {
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.purchase-detail dd {
+  margin: 4px 0 0;
+  font-size: 14px;
+}
+.purchase-detail__text {
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+.purchase-detail__items {
+  display: grid;
+  gap: 12px;
+}
+.purchase-detail__item,
+.purchase-detail__editor {
+  border: 1px solid var(--color-border);
+  padding: 16px;
+  border-radius: var(--radius-md);
+}
+.purchase-detail__editor {
+  margin-top: 20px;
+}
+.purchase-detail__notice,
+.purchase-detail__initialization {
+  background: var(--color-surface-muted);
+  padding: 14px;
+  border-radius: var(--radius-md);
+  margin-block: 14px;
+  line-height: 1.6;
+}
+.purchase-detail__initialization h4 {
+  margin: 0;
+}
+.purchase-detail__actions {
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+.purchase-detail mat-form-field {
+  width: 100%;
+  margin-top: 12px;
+}
+.purchase-detail__history {
+  border-top: 1px solid var(--color-border);
+  margin-top: 24px;
+  padding-top: 16px;
+}
+.purchase-detail summary {
+  cursor: pointer;
+  padding-block: 8px;
+}
+.purchase-detail__history article {
+  padding-block: 14px;
+  border-bottom: 1px solid var(--color-border);
+}
+.purchase-detail pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+@media (max-width: 600px) {
+  .purchase-detail {
+    padding: 16px;
+  }
+  .purchase-detail__metadata {
+    grid-template-columns: 1fr;
+  }
+}

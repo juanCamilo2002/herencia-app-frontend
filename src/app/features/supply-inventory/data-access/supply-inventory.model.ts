@@ -10,7 +10,7 @@ export type SupplyInventorySummary = {
 
 export type SupplyMovementType = 'INBOUND' | 'OUTBOUND' | 'ADJUSTMENT' | 'LOSS';
 
-export type SupplyMovementSourceType = 'MANUAL' | 'PRODUCTION';
+export type SupplyMovementSourceType = 'MANUAL' | 'PRODUCTION' | 'PURCHASE';
 
 export type SupplyMovement = {
   id: string;

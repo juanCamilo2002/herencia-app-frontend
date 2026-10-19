@@ -7,7 +7,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { ToastService } from '../../../shared/services/toast.service';
-import { CreateSupplyRequest, Supply, SupplyUnit, UpdateSupplyRequest } from '../data-access/supply.model';
+import {
+  CreateSupplyRequest,
+  Supply,
+  SupplyUnit,
+  UpdateSupplyRequest,
+} from '../data-access/supply.model';
 import { SupplyService } from '../data-access/supply.service';
 
 export type SupplyFormDialogData = {
@@ -53,11 +58,15 @@ export class SupplyFormDialog {
   protected readonly form = this.formBuilder.nonNullable.group({
     name: [this.supply?.name ?? '', [Validators.required, Validators.maxLength(120)]],
     category: [this.supply?.category ?? '', [Validators.maxLength(120)]],
-    unit: [this.supply?.unit ?? 'UNIT' as SupplyUnit, [Validators.required]],
+    unit: [this.supply?.unit ?? ('UNIT' as SupplyUnit), [Validators.required]],
     unitCost: [this.supply?.unitCost ?? 0, [Validators.required, Validators.min(0)]],
     stock: [this.supply?.stock ?? 0, [Validators.required, Validators.min(0)]],
     minimumStock: [this.supply?.minimumStock ?? 0, [Validators.required, Validators.min(0)]],
   });
+
+  constructor() {
+    if (this.supply && this.supply.stock > 0) this.form.controls.unit.disable();
+  }
 
   protected close() {
     this.dialogRef.close(false);

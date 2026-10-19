@@ -52,9 +52,7 @@
       <mat-label>Rol</mat-label>
       <mat-select formControlName="roleId" [disabled]="loadingRoles()">
         @for (role of roles(); track role.id) {
-          <mat-option [value]="role.id">
-            {{ role.name }} · {{ role.code }}
-          </mat-option>
+          <mat-option [value]="role.id"> {{ role.name }} · {{ role.code }} </mat-option>
         }
       </mat-select>
 
@@ -80,13 +78,9 @@
 
     @if (isEdit) {
       <div class="app-form-dialog__status">
-        <mat-slide-toggle formControlName="active">
-          Usuario activo
-        </mat-slide-toggle>
+        <mat-slide-toggle formControlName="active"> Usuario activo </mat-slide-toggle>
 
-        <p>
-          Si desactivas el usuario, no podrá iniciar sesión ni operar en el sistema.
-        </p>
+        <p>Si desactivas el usuario, no podrá iniciar sesión ni operar en el sistema.</p>
       </div>
     }
 
@@ -95,9 +89,7 @@
     }
 
     <footer class="app-form-dialog__actions">
-      <button mat-button type="button" [disabled]="saving()" (click)="close()">
-        Cancelar
-      </button>
+      <button mat-button type="button" [disabled]="saving()" (click)="close()">Cancelar</button>
 
       <button mat-flat-button type="submit" [disabled]="saving() || loadingRoles()">
         @if (saving()) {

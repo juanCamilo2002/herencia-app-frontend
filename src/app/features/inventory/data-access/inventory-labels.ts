@@ -48,6 +48,8 @@ export function stockMovementSourceLabel(sourceType: StockMovementSourceType | n
       return 'Venta';
     case 'PRODUCTION':
       return 'Producción';
+    case 'PURCHASE':
+      return 'Compra';
     default:
       return 'Sin origen';
   }

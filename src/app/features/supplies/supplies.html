@@ -37,9 +37,9 @@
       />
 
       <app-metric-card
-        label="Valor inventario"
+        label="Valor de referencia"
         [value]="(inventoryValue() | currency: 'COP' : 'symbol-narrow' : '1.0-0') ?? ''"
-        hint="Valor estimado de insumos en stock"
+        hint="Existencias × costo manual de referencia"
         icon="paid"
         tone="success"
       />
@@ -124,7 +124,9 @@
             </ng-container>
 
             <ng-container matColumnDef="unitCost">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header="unitCost">Costo unitario</th>
+              <th mat-header-cell *matHeaderCellDef mat-sort-header="unitCost">
+                Costo de referencia
+              </th>
               <td mat-cell *matCellDef="let supply">
                 <strong>{{ supply.unitCost | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
               </td>
@@ -248,7 +250,7 @@
                 </div>
 
                 <div>
-                  <span>Costo</span>
+                  <span>Costo de referencia</span>
                   <strong>{{
                     supply.unitCost | currency: 'COP' : 'symbol-narrow' : '1.0-0'
                   }}</strong>

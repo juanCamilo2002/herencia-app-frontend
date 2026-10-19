@@ -1,0 +1,275 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <span class="page__eyebrow">Abastecimiento</span>
+      <h1 class="page__title">Proveedores</h1>
+      <p class="page__subtitle">Administra a quién compras productos e insumos.</p>
+    </div>
+
+    <div class="page__actions">
+      @if (canCreate()) {
+        <button mat-flat-button type="button" [disabled]="loading() || busy()" (click)="openForm()">
+          <mat-icon>add</mat-icon>
+          Nuevo proveedor
+        </button>
+      }
+    </div>
+  </header>
+
+  <section class="data-panel" [attr.aria-busy]="loading() || changingId() !== null">
+    <div class="data-panel__header">
+      <div class="data-panel__title-group">
+        <span class="data-panel__icon">
+          <mat-icon>local_shipping</mat-icon>
+        </span>
+
+        <div>
+          <h2>Directorio de proveedores</h2>
+          <p>Los proveedores inactivos conservan sus datos y registros anteriores.</p>
+        </div>
+      </div>
+
+      <button mat-button type="button" [disabled]="loading() || busy()" (click)="loadSuppliers()">
+        Actualizar
+      </button>
+    </div>
+
+    <form class="suppliers__filters" [formGroup]="filtersForm" (ngSubmit)="applyFilters()">
+      <mat-form-field appearance="outline">
+        <mat-label>Buscar por nombre</mat-label>
+        <input
+          matInput
+          formControlName="name"
+          maxlength="160"
+          autocomplete="off"
+          placeholder="Nombre o razón social"
+        />
+
+        @if (filtersForm.controls.name.invalid && filtersForm.controls.name.touched) {
+          <mat-error>Máximo 160 caracteres.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-checkbox formControlName="includeInactive"> Incluir inactivos </mat-checkbox>
+
+      <div class="suppliers__filter-actions">
+        <button mat-flat-button type="submit" [disabled]="loading() || busy()">Buscar</button>
+
+        <button mat-button type="button" [disabled]="loading() || busy()" (click)="clearFilters()">
+          Limpiar
+        </button>
+      </div>
+    </form>
+
+    @if (actionError()) {
+      <div class="suppliers__action-error" role="alert">
+        {{ actionError() }}
+      </div>
+    }
+
+    @if (changingId()) {
+      <p class="data-panel__muted" role="status">Actualizando estado del proveedor...</p>
+    }
+
+    @if (loading()) {
+      <p class="data-panel__muted" role="status">Cargando proveedores...</p>
+    } @else if (error()) {
+      <div role="alert">
+        <p>{{ error() }}</p>
+
+        <button mat-button type="button" [disabled]="busy()" (click)="loadSuppliers()">
+          Reintentar listado
+        </button>
+      </div>
+    } @else if (suppliers().length === 0) {
+      <div class="empty-state">
+        <span class="empty-state__icon">
+          <mat-icon>local_shipping</mat-icon>
+        </span>
+
+        <h3>No hay proveedores para mostrar</h3>
+        <p>Prueba otros filtros o registra un proveedor.</p>
+      </div>
+    } @else {
+      <div class="data-table suppliers__table">
+        <table
+          mat-table
+          matSort
+          [dataSource]="suppliers()"
+          [matSortActive]="sort().active"
+          [matSortDirection]="sort().direction"
+          [matSortDisabled]="loading() || busy()"
+          (matSortChange)="sortSuppliers($event)"
+        >
+          <ng-container matColumnDef="supplier">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="name">Proveedor</th>
+
+            <td mat-cell *matCellDef="let supplier">
+              <strong>{{ supplier.name }}</strong>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="document">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="document">Identificación</th>
+
+            <td mat-cell *matCellDef="let supplier">
+              {{ supplier.document || 'Sin identificación' }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="contact">
+            <th mat-header-cell *matHeaderCellDef>Contacto</th>
+
+            <td mat-cell *matCellDef="let supplier">
+              <span>{{ supplier.phone || 'Sin teléfono' }}</span>
+              <small>{{ supplier.email || 'Sin correo' }}</small>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="address">
+            <th mat-header-cell *matHeaderCellDef>Dirección</th>
+
+            <td mat-cell *matCellDef="let supplier">
+              @if (supplier.address; as address) {
+                <details class="suppliers__address">
+                  <summary>Ver dirección</summary>
+                  <p>{{ address }}</p>
+                </details>
+              } @else {
+                <span>Sin dirección</span>
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="active">Estado</th>
+
+            <td mat-cell *matCellDef="let supplier">
+              <app-status-badge
+                [label]="supplier.active ? 'Activo' : 'Inactivo'"
+                [tone]="supplier.active ? 'success' : 'default'"
+                size="small"
+              />
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Acciones</th>
+
+            <td mat-cell *matCellDef="let supplier">
+              <button
+                mat-icon-button
+                type="button"
+                [disabled]="busy()"
+                [attr.aria-label]="'Acciones de ' + supplier.name"
+                [matMenuTriggerFor]="supplierMenu"
+              >
+                <mat-icon>more_vert</mat-icon>
+              </button>
+
+              <mat-menu #supplierMenu="matMenu">
+                @if (canUpdate()) {
+                  <button mat-menu-item type="button" (click)="openForm(supplier)">
+                    <mat-icon>edit</mat-icon>
+                    <span>Editar</span>
+                  </button>
+                }
+
+                @if (canChangeState()) {
+                  <button mat-menu-item type="button" (click)="changeActive(supplier)">
+                    <mat-icon>
+                      {{ supplier.active ? 'block' : 'check_circle' }}
+                    </mat-icon>
+                    <span>
+                      {{ supplier.active ? 'Desactivar' : 'Reactivar' }}
+                    </span>
+                  </button>
+                }
+              </mat-menu>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns()"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns()"></tr>
+        </table>
+      </div>
+
+      <div class="data-mobile-list">
+        @for (supplier of suppliers(); track supplier.id) {
+          <article class="data-card">
+            <div class="data-card__header">
+              <strong>{{ supplier.name }}</strong>
+
+              <app-status-badge
+                [label]="supplier.active ? 'Activo' : 'Inactivo'"
+                [tone]="supplier.active ? 'success' : 'default'"
+                size="small"
+              />
+            </div>
+
+            <div class="data-card__grid">
+              <div>
+                <span>Identificación</span>
+                <strong>
+                  {{ supplier.document || 'Sin identificación' }}
+                </strong>
+              </div>
+
+              <div>
+                <span>Teléfono</span>
+                <strong>
+                  {{ supplier.phone || 'Sin teléfono' }}
+                </strong>
+              </div>
+
+              <div class="suppliers__full">
+                <span>Correo</span>
+                <strong>{{ supplier.email || 'Sin correo' }}</strong>
+              </div>
+
+              <div class="suppliers__full">
+                <span>Dirección</span>
+                <strong>
+                  {{ supplier.address || 'Sin dirección' }}
+                </strong>
+              </div>
+            </div>
+
+            @if (hasActions()) {
+              <div class="suppliers__card-actions">
+                @if (canUpdate()) {
+                  <button mat-button type="button" [disabled]="busy()" (click)="openForm(supplier)">
+                    Editar
+                  </button>
+                }
+
+                @if (canChangeState()) {
+                  <button
+                    mat-button
+                    type="button"
+                    [disabled]="busy()"
+                    (click)="changeActive(supplier)"
+                  >
+                    {{ supplier.active ? 'Desactivar' : 'Reactivar' }}
+                  </button>
+                }
+              </div>
+            }
+          </article>
+        }
+      </div>
+    }
+
+    @if (totalElements() > 0) {
+      <mat-paginator
+        [length]="totalElements()"
+        [pageIndex]="pageIndex()"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="[10, 20, 50]"
+        [disabled]="loading() || busy() || !!error()"
+        showFirstLastButtons
+        (page)="pageChanged($event)"
+      />
+    }
+  </section>
+</section>

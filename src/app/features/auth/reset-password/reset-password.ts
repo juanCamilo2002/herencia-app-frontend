@@ -1,5 +1,11 @@
 import { Component, inject, signal } from '@angular/core';
-import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -59,20 +65,22 @@ export class ResetPassword {
     this.saving.set(true);
     this.error.set(null);
 
-    this.authService.confirmPasswordReset({
-      token: this.token,
-      password: this.form.controls.password.value,
-    }).subscribe({
-      next: () => {
-        this.completed.set(true);
-        this.saving.set(false);
-        setTimeout(() => this.router.navigateByUrl('/login'), 1200);
-      },
-      error: () => {
-        this.error.set('El enlace expiró o la contraseña no cumple los requisitos.');
-        this.saving.set(false);
-      },
-    });
+    this.authService
+      .confirmPasswordReset({
+        token: this.token,
+        password: this.form.controls.password.value,
+      })
+      .subscribe({
+        next: () => {
+          this.completed.set(true);
+          this.saving.set(false);
+          setTimeout(() => this.router.navigateByUrl('/login'), 1200);
+        },
+        error: () => {
+          this.error.set('El enlace expiró o la contraseña no cumple los requisitos.');
+          this.saving.set(false);
+        },
+      });
   }
 
   protected togglePasswordVisibility() {

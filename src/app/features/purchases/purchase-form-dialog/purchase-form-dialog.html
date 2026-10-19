@@ -1,0 +1,135 @@
+<section class="app-form-dialog">
+  <header class="app-form-dialog__header">
+    <div>
+      <span>Compras</span>
+      <h2>{{ purchase ? 'Editar compra' : 'Nueva compra' }}</h2>
+      <p>El stock cambia únicamente al recibir el pedido completo.</p>
+    </div>
+    <button
+      mat-icon-button
+      type="button"
+      aria-label="Cerrar compra"
+      [disabled]="saving()"
+      (click)="close()"
+    >
+      <mat-icon>close</mat-icon>
+    </button>
+  </header>
+  <form class="app-form-dialog__form" [formGroup]="form" (ngSubmit)="submit()">
+    @if (loading()) {
+      <p class="app-form-dialog__field--full" role="status">Cargando opciones...</p>
+    }
+    @if (error()) {
+      <div class="app-form-dialog__error" role="alert">
+        {{ error() }}
+        <button mat-button type="button" [disabled]="saving() || loading()" (click)="load()">
+          Reintentar opciones
+        </button>
+      </div>
+    }
+    <mat-form-field appearance="outline"
+      ><mat-label>Proveedor</mat-label
+      ><mat-select formControlName="supplierId">
+        @for (supplier of suppliers(); track supplier.id) {
+          <mat-option [value]="supplier.id">{{ supplier.name }}</mat-option>
+        }
+      </mat-select>
+      @if (form.controls.supplierId.invalid && form.controls.supplierId.touched) {
+        <mat-error>Selecciona un proveedor.</mat-error>
+      }
+    </mat-form-field>
+    <mat-form-field appearance="outline"
+      ><mat-label>Fecha y hora de compra</mat-label
+      ><input matInput type="datetime-local" step="1" formControlName="purchaseDateTime"
+    /></mat-form-field>
+    <mat-form-field appearance="outline"
+      ><mat-label>Factura o referencia (opcional)</mat-label
+      ><input matInput formControlName="reference" maxlength="120"
+    /></mat-form-field>
+    <mat-form-field appearance="outline"
+      ><mat-label>Observaciones (opcional)</mat-label
+      ><textarea matInput formControlName="notes" rows="2" maxlength="1000"></textarea>
+    </mat-form-field>
+    <section class="purchase-lines app-form-dialog__field--full">
+      <div class="purchase-lines__heading">
+        <div>
+          <h3>Artículos del pedido</h3>
+          <p>
+            Productos por unidades; insumos en su unidad registrada. Costos de compra, no precios de
+            venta.
+          </p>
+        </div>
+        <button
+          mat-stroked-button
+          type="button"
+          [disabled]="saving() || loading() || items.length >= 100"
+          (click)="addLine()"
+        >
+          Agregar artículo
+        </button>
+      </div>
+      <div formArrayName="items">
+        @for (item of items.controls; track item; let index = $index) {
+          <div class="purchase-lines__row" [formGroupName]="index">
+            <mat-form-field appearance="outline"
+              ><mat-label>Producto o insumo</mat-label
+              ><mat-select formControlName="target">
+                @for (option of options(); track option.type + ':' + option.id) {
+                  <mat-option [value]="option.type + ':' + option.id"
+                    >{{ option.type === 'PRODUCT' ? 'Producto' : 'Insumo' }} ·
+                    {{ option.name }}</mat-option
+                  >
+                }</mat-select
+              ><mat-hint>{{ optionUnit(item.controls.target.value) }}</mat-hint></mat-form-field
+            >
+            <mat-form-field appearance="outline"
+              ><mat-label>Cantidad</mat-label
+              ><input matInput inputmode="decimal" formControlName="quantity" />
+              @if (item.controls.quantity.invalid && item.controls.quantity.touched) {
+                <mat-error>Hasta 3 decimales.</mat-error>
+              }
+            </mat-form-field>
+            <mat-form-field appearance="outline"
+              ><mat-label>Costo unitario</mat-label
+              ><input matInput inputmode="decimal" formControlName="unitCost" />
+              @if (item.controls.unitCost.invalid && item.controls.unitCost.touched) {
+                <mat-error>Hasta 2 decimales.</mat-error>
+              }
+            </mat-form-field>
+            <div class="purchase-lines__subtotal">
+              <small>Subtotal</small
+              ><strong>{{
+                lineTotal(item.controls.quantity.value, item.controls.unitCost.value)
+                  | purchaseMoney
+              }}</strong>
+            </div>
+            <button
+              mat-icon-button
+              type="button"
+              [attr.aria-label]="'Quitar artículo ' + (index + 1)"
+              [disabled]="saving()"
+              (click)="removeLine(index)"
+            >
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+          </div>
+        }
+      </div>
+    </section>
+    <div class="app-form-dialog__summary">
+      <p>Total de artículos</p>
+      <strong>{{ total() | purchaseMoney }}</strong>
+      <p>
+        Se guarda como
+        {{ purchase?.status === 'ORDERED' ? 'pedido pendiente de recepción' : 'borrador' }}. El
+        backend confirma el total.
+      </p>
+    </div>
+    <footer class="app-form-dialog__actions">
+      <button mat-button type="button" [disabled]="saving()" (click)="close()">Cancelar</button
+      ><button mat-flat-button type="submit" [disabled]="saving() || loading()">
+        {{ saving() ? 'Guardando...' : 'Guardar compra' }}
+      </button>
+    </footer>
+  </form>
+</section>

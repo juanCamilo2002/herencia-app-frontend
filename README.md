@@ -1,5 +1,9 @@
 # Frontend
 
+## Formato del código
+
+Consulta la [guía de formato](docs/CODE_STYLE.md). Comandos: `npm run format` y `npm run format:check`.
+
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.1.8.
 
 ## Development server

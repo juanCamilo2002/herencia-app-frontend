@@ -8,7 +8,6 @@ import { MatInputModule } from '@angular/material/input';
 import { AuthSessionService } from '../../../core/auth/auth-session.service';
 import { APP_NAVIGATION_ITEMS } from '../../../core/navigation/app-navigation';
 
-
 @Component({
   imports: [
     MatButtonModule,
@@ -16,7 +15,7 @@ import { APP_NAVIGATION_ITEMS } from '../../../core/navigation/app-navigation';
     MatIconModule,
     MatInputModule,
     ReactiveFormsModule,
-    RouterLink
+    RouterLink,
   ],
   selector: 'app-login',
   styleUrl: './login.scss',
@@ -76,11 +75,10 @@ export class Login implements OnInit {
   }
 
   private defaultRoute() {
-
-
-    return APP_NAVIGATION_ITEMS.find((item) =>
-      this.session.hasPermission(item.permission)
-    )?.route ?? '/dashboard';
+    return (
+      APP_NAVIGATION_ITEMS.find((item) => this.session.hasPermission(item.permission))?.route ??
+      '/dashboard'
+    );
   }
 
   private returnUrl() {

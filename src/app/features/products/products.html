@@ -38,9 +38,9 @@
         icon="warehouse"
       />
       <app-metric-card
-        label="Valor inventario"
+        label="Valor a precio de venta"
         [value]="(inventoryValue() | currency: 'COP' : 'symbol-narrow' : '1.0-0') ?? ''"
-        hint="Valor estimado en stock"
+        hint="Existencias × precio de venta"
         icon="paid"
         tone="success"
       />

@@ -8,7 +8,11 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { ToastService } from '../../../shared/services/toast.service';
-import { CreateEmployeeRequest, Employee, UpdateEmployeeRequest } from '../data-access/employee.model';
+import {
+  CreateEmployeeRequest,
+  Employee,
+  UpdateEmployeeRequest,
+} from '../data-access/employee.model';
 import { EmployeeService } from '../data-access/employee.service';
 
 export type EmployeeFormDialogData = {
@@ -35,7 +39,9 @@ export class EmployeeFormDialog {
   private readonly employeeService = inject(EmployeeService);
   private readonly toast = inject(ToastService);
   private readonly dialogRef = inject(MatDialogRef<EmployeeFormDialog>);
-  private readonly data = inject<EmployeeFormDialogData | null>(MAT_DIALOG_DATA, { optional: true });
+  private readonly data = inject<EmployeeFormDialogData | null>(MAT_DIALOG_DATA, {
+    optional: true,
+  });
 
   protected readonly employee = this.data?.employee ?? null;
   protected readonly isEdit = this.employee != null;

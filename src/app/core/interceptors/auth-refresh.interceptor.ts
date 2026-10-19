@@ -33,9 +33,7 @@ export const authRefreshInterceptor: HttpInterceptorFn = (request, next) => {
 };
 
 function shouldTryRefresh(url: string) {
-  const normalizedUrl = url.startsWith(API_BASE_URL)
-    ? url.slice(API_BASE_URL.length)
-    : url;
+  const normalizedUrl = url.startsWith(API_BASE_URL) ? url.slice(API_BASE_URL.length) : url;
 
   return (
     !normalizedUrl.startsWith('/auth/login') &&

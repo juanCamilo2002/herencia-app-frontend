@@ -7,6 +7,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "format": "prettier --write \"src/**/*.{ts,html,scss,json}\" \"*.{ts,json,jsonc}\" .prettierrc",
+    "format:check": "prettier --check \"src/**/*.{ts,html,scss,json}\" \"*.{ts,json,jsonc}\" .prettierrc",
     "serve:ssr:frontend": "node dist/frontend/server/server.mjs"
   },
   "private": true,

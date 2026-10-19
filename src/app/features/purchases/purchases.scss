@@ -1,0 +1,37 @@
+:host {
+  display: block;
+}
+.purchases__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.purchases__filters mat-form-field {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+.purchases__table table {
+  table-layout: fixed;
+  min-width: 1040px;
+}
+.purchases__table .mat-column-supplier {
+  width: 23%;
+}
+.purchases__table .mat-column-date {
+  width: 130px;
+}
+.purchases__table .mat-column-status {
+  width: 180px;
+}
+.purchases__table .mat-column-total {
+  width: 150px;
+}
+.purchases__table .mat-column-actions {
+  width: 120px;
+}
+.purchases__table td,
+.data-card {
+  overflow-wrap: anywhere;
+}

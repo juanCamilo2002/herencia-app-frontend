@@ -49,25 +49,26 @@ export class InventoryMovementDialog implements OnInit {
     type: ['INBOUND' as StockMovementType, [Validators.required]],
     quantity: [1, [Validators.required, Validators.min(0)]],
     movementDate: this.formBuilder.control<Date | null>(new Date(), [Validators.required]),
-    movementTime: this.formBuilder.nonNullable.control(this.currentTimeOption(), [Validators.required]),
+    movementTime: this.formBuilder.nonNullable.control(this.currentTimeOption(), [
+      Validators.required,
+    ]),
     reason: ['', [Validators.maxLength(255)]],
   });
 
-
   protected readonly selectedType = toSignal(this.form.controls.type.valueChanges, {
-    initialValue: this.form.controls.type.value
+    initialValue: this.form.controls.type.value,
   });
 
   protected readonly selectedProductId = toSignal(this.form.controls.productId.valueChanges, {
-    initialValue: this.form.controls.productId.value
+    initialValue: this.form.controls.productId.value,
   });
 
   protected readonly selectedQuantity = toSignal(this.form.controls.quantity.valueChanges, {
     initialValue: this.form.controls.quantity.value,
   });
 
-  protected readonly selectedProduct = computed(() =>
-    this.products().find((product) => product.id === this.selectedProductId()) ?? null
+  protected readonly selectedProduct = computed(
+    () => this.products().find((product) => product.id === this.selectedProductId()) ?? null,
   );
 
   protected readonly selectedReason = toSignal(this.form.controls.reason.valueChanges, {
@@ -84,11 +85,11 @@ export class InventoryMovementDialog implements OnInit {
     }
 
     if ((type === 'INBOUND' || type === 'OUTBOUND') && quantity <= 0) {
-      return 'Para entradas y salidas la cantidad debe ser mayor a 0.'
+      return 'Para entradas y salidas la cantidad debe ser mayor a 0.';
     }
 
     if (type === 'ADJUSTMENT' && quantity < 0) {
-      return 'El stock final no puede ser negativo'
+      return 'El stock final no puede ser negativo';
     }
 
     if ((type === 'OUTBOUND' || type == 'LOSS') && product && quantity > product.stock) {
@@ -167,7 +168,6 @@ export class InventoryMovementDialog implements OnInit {
         this.error.set(message);
         this.toast.error(message);
         this.saving.set(false);
-
       },
     });
   }

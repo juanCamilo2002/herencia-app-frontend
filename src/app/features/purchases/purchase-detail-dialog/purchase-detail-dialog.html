@@ -1,0 +1,284 @@
+<section class="app-form-dialog">
+  <header class="app-form-dialog__header">
+    <div>
+      <span>Compras</span>
+      <h2>Detalle de compra</h2>
+      <p>{{ purchase()?.supplierName || 'Consulta del pedido' }}</p>
+    </div>
+    <button
+      mat-icon-button
+      type="button"
+      aria-label="Cerrar detalle de compra"
+      [disabled]="saving()"
+      (click)="close()"
+    >
+      <mat-icon>close</mat-icon>
+    </button>
+  </header>
+  <div class="purchase-detail">
+    @if (error()) {
+      <div class="app-form-dialog__error" role="alert">{{ error() }}</div>
+    }
+    @if (loading() || preparing()) {
+      <p role="status">
+        {{ preparing() ? 'Consultando existencias actuales...' : 'Cargando compra...' }}
+      </p>
+    }
+    <button
+      mat-button
+      type="button"
+      [disabled]="saving() || loading() || preparing()"
+      (click)="load()"
+    >
+      Actualizar detalle
+    </button>
+    @if (purchase(); as current) {
+      <div class="purchase-detail__heading">
+        <strong class="purchase-detail__total">{{ current.total | purchaseMoney }}</strong
+        ><app-status-badge
+          [label]="statusLabel(current.status)"
+          [tone]="statusTone(current.status)"
+        />
+      </div>
+      <dl class="purchase-detail__metadata">
+        <div>
+          <dt>Proveedor</dt>
+          <dd>{{ current.supplierName }}</dd>
+        </div>
+        <div>
+          <dt>Fecha de compra</dt>
+          <dd>{{ current.purchaseDateTime | date: 'dd/MM/yyyy HH:mm' }}</dd>
+        </div>
+        <div>
+          <dt>Factura o referencia</dt>
+          <dd>{{ current.reference || 'Sin referencia' }}</dd>
+        </div>
+        <div>
+          <dt>Registrada por</dt>
+          <dd>{{ current.createdByName }}</dd>
+        </div>
+      </dl>
+      @if (current.notes) {
+        <p class="purchase-detail__text">{{ current.notes }}</p>
+      }
+      @if (current.receivedAt) {
+        <p class="purchase-detail__notice">
+          Recibida el {{ current.receivedAt | date: 'dd/MM/yyyy HH:mm' }} por
+          {{ current.receivedByName }}. Las entradas se registraron en los inventarios
+          correspondientes.
+        </p>
+      }
+      @if (current.cancellationReason) {
+        <p class="purchase-detail__notice">
+          Motivo de cancelación: {{ current.cancellationReason }}
+        </p>
+      }
+      <h3>Artículos</h3>
+      <div class="purchase-detail__items">
+        @for (item of current.items; track item.id) {
+          <article class="purchase-detail__item">
+            <div class="purchase-detail__heading">
+              <strong>{{ item.itemName }}</strong
+              ><strong>{{ item.subtotal | purchaseMoney }}</strong>
+            </div>
+            <p class="purchase-detail__muted">
+              {{ item.productId ? 'Producto' : 'Insumo' }} · {{ unitLabel(item.itemUnit) }}
+            </p>
+            <dl class="purchase-detail__metadata">
+              <div>
+                <dt>Cantidad</dt>
+                <dd>{{ item.quantity }}</dd>
+              </div>
+              <div>
+                <dt>Costo unitario de compra</dt>
+                <dd>{{ item.unitCost | purchaseMoney }}</dd>
+              </div>
+              @if (item.newStock !== null) {
+                <div>
+                  <dt>Stock antes → después</dt>
+                  <dd>{{ item.previousStock }} → {{ item.newStock }}</dd>
+                </div>
+                <div>
+                  <dt>Costo promedio resultante</dt>
+                  <dd>
+                    {{ item.receivedAverageCost | purchaseMoney: 6 }}
+                  </dd>
+                </div>
+              }
+            </dl>
+            @if (item.costInitializationId) {
+              <p class="purchase-detail__muted">
+                Costo unitario inicial declarado para las existencias anteriores:
+                {{ item.initialUnitCost | purchaseMoney: 6 }}.
+              </p>
+            }
+          </article>
+        }
+      </div>
+
+      @if (!preview() && !canceling()) {
+        <div class="purchase-detail__actions">
+          @if (can('update')) {
+            <button
+              mat-button
+              type="button"
+              [disabled]="saving() || loading() || preparing()"
+              (click)="edit()"
+            >
+              Editar compra
+            </button>
+          }
+          @if (can('cancel')) {
+            <button
+              mat-button
+              type="button"
+              [disabled]="saving() || loading() || preparing()"
+              (click)="beginCancel()"
+            >
+              Cancelar compra
+            </button>
+          }
+          @if (can('order')) {
+            <button
+              mat-flat-button
+              type="button"
+              [disabled]="saving() || loading()"
+              (click)="order()"
+            >
+              Confirmar pedido
+            </button>
+          }
+          @if (can('receive')) {
+            <button
+              mat-flat-button
+              type="button"
+              [disabled]="saving() || loading() || preparing()"
+              (click)="prepareReceipt()"
+            >
+              Preparar recepción
+            </button>
+          }
+        </div>
+      }
+      @if (canceling()) {
+        <section class="purchase-detail__editor">
+          <h3>Cancelar compra</h3>
+          <p>El registro se conserva. No se generan entradas de inventario.</p>
+          <mat-form-field appearance="outline"
+            ><mat-label>Motivo obligatorio</mat-label
+            ><textarea matInput rows="3" maxlength="1000" [formControl]="reason"></textarea>
+            @if (reason.invalid && reason.touched) {
+              <mat-error>Escribe un motivo.</mat-error>
+            }
+          </mat-form-field>
+          <div class="purchase-detail__actions">
+            <button mat-button type="button" [disabled]="saving()" (click)="abandonCancel()">
+              Volver</button
+            ><button mat-flat-button type="button" [disabled]="saving()" (click)="cancel()">
+              Confirmar cancelación
+            </button>
+          </div>
+        </section>
+      }
+      @if (preview(); as receipt) {
+        <form class="purchase-detail__editor" [formGroup]="receiptForm" (ngSubmit)="receive()">
+          <div class="purchase-detail__heading">
+            <h3>Recepción completa</h3>
+            <button
+              mat-button
+              type="button"
+              [disabled]="saving() || preparing()"
+              (click)="prepareReceipt()"
+            >
+              Actualizar existencias
+            </button>
+          </div>
+          <p>
+            Confirma que llegaron todos los artículos. El stock y los costos se actualizan juntos.
+          </p>
+          <mat-form-field appearance="outline"
+            ><mat-label>Fecha y hora real de recepción</mat-label
+            ><input matInput type="datetime-local" step="1" formControlName="receivedAt"
+          /></mat-form-field>
+          @for (item of receipt.items; track item.itemId) {
+            <p class="purchase-detail__muted">
+              {{ item.itemName }} · Existencias actuales: {{ item.currentStock }}
+              {{ unitLabel(item.itemUnit) }} ·
+              {{ item.averageUnitCost === null ? 'Costo pendiente de definir' : 'Costo conocido' }}
+            </p>
+            @if (!item.active || !item.unitMatches) {
+              <p class="app-form-dialog__error">
+                {{ item.itemName }} está inactivo o su unidad cambió. Revisa el artículo antes de
+                recibir.
+              </p>
+            }
+          }
+          <div formArrayName="declarations">
+            @for (declaration of declarations.controls; track declaration; let index = $index) {
+              @if (declarationItem(declaration.controls.itemId.value); as item) {
+                <section class="purchase-detail__initialization" [formGroupName]="index">
+                  <h4>Costo inicial · {{ item.itemName }}</h4>
+                  <p>
+                    Declara el costo por {{ unitLabel(item.itemUnit) }} de las
+                    {{ item.currentStock }} existencias anteriores. No es el precio de venta ni el
+                    costo de la nueva compra.
+                  </p>
+                  <mat-form-field appearance="outline"
+                    ><mat-label>Costo unitario de las existencias anteriores</mat-label
+                    ><input matInput inputmode="decimal" formControlName="unitCost" />
+                    @if (
+                      declaration.controls.unitCost.invalid && declaration.controls.unitCost.touched
+                    ) {
+                      <mat-error>Valor no negativo, hasta 6 decimales.</mat-error>
+                    }
+                  </mat-form-field>
+                  @if (item.suggestedInitialCost !== null) {
+                    <p class="purchase-detail__muted">
+                      Costo manual de referencia:
+                      {{ item.suggestedInitialCost | purchaseMoney }}. Verifica que represente tus
+                      existencias.
+                    </p>
+                    <button
+                      mat-button
+                      type="button"
+                      [disabled]="saving()"
+                      (click)="useReference(index)"
+                    >
+                      Usar costo de referencia
+                    </button>
+                  }
+                </section>
+              }
+            }
+          </div>
+          <div class="purchase-detail__actions">
+            <button mat-button type="button" [disabled]="saving()" (click)="abandonReceipt()">
+              Volver</button
+            ><button
+              mat-flat-button
+              type="submit"
+              [disabled]="saving() || preparing() || !receiptReady()"
+            >
+              {{ saving() ? 'Recibiendo...' : 'Confirmar recepción completa' }}
+            </button>
+          </div>
+        </form>
+      }
+      <details class="purchase-detail__history">
+        <summary>Historial de la compra ({{ current.history.length }})</summary>
+        @for (event of current.history; track event.id) {
+          <article>
+            <strong>{{ event.comment }}</strong>
+            <p class="purchase-detail__muted">
+              {{ event.performedByName }} · {{ event.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+            </p>
+            <details>
+              <summary>Datos del evento</summary>
+              <pre>{{ event.details | json }}</pre>
+            </details>
+          </article>
+        }
+      </details>
+    }
+  </div>
+</section>

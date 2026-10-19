@@ -1,11 +1,5 @@
 export type SupplyUnit =
-  | 'UNIT'
-  | 'GRAM'
-  | 'KILOGRAM'
-  | 'MILLILITER'
-  | 'LITER'
-  | 'METER'
-  | 'PACKAGE';
+  'UNIT' | 'GRAM' | 'KILOGRAM' | 'MILLILITER' | 'LITER' | 'METER' | 'PACKAGE';
 
 export type Supply = {
   id: string;

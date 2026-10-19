@@ -36,7 +36,7 @@
       <mat-label>Procesos realizados</mat-label>
       <mat-select formControlName="processes" multiple>
         @for (process of processOptions; track process.value) {
-        <mat-option [value]="process.value">{{ process.label }}</mat-option>
+          <mat-option [value]="process.value">{{ process.label }}</mat-option>
         }
       </mat-select>
     </mat-form-field>
@@ -56,26 +56,33 @@
 
       <div formArrayName="outputs" class="production-form__rows">
         @for (group of outputControls(); track $index; let index = $index) {
-        <div class="production-form__row" [formGroupName]="index">
-          <mat-form-field appearance="outline">
-            <mat-label>Producto</mat-label>
-            <mat-select formControlName="productId" [disabled]="loadingOptions()">
-              @for (product of products(); track product.id) {
-              <mat-option [value]="product.id">{{ product.name }} - Stock actual: {{ product.stock }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
+          <div class="production-form__row" [formGroupName]="index">
+            <mat-form-field appearance="outline">
+              <mat-label>Producto</mat-label>
+              <mat-select formControlName="productId" [disabled]="loadingOptions()">
+                @for (product of products(); track product.id) {
+                  <mat-option [value]="product.id"
+                    >{{ product.name }} - Stock actual: {{ product.stock }}</mat-option
+                  >
+                }
+              </mat-select>
+            </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Cantidad</mat-label>
-            <input matInput type="number" formControlName="quantity" />
-          </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Cantidad</mat-label>
+              <input matInput type="number" formControlName="quantity" />
+            </mat-form-field>
 
-          <button mat-icon-button type="button" aria-label="Quitar producto" (click)="removeOutput(index)"
-            [disabled]="outputs.length === 1">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </div>
+            <button
+              mat-icon-button
+              type="button"
+              aria-label="Quitar producto"
+              (click)="removeOutput(index)"
+              [disabled]="outputs.length === 1"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
         }
       </div>
     </section>
@@ -95,27 +102,33 @@
 
       <div formArrayName="consumedSupplies" class="production-form__rows">
         @for (group of consumedSupplyControls(); track $index; let index = $index) {
-        <div class="production-form__row" [formGroupName]="index">
-          <mat-form-field appearance="outline">
-            <mat-label>Insumo</mat-label>
-            <mat-select formControlName="supplyId" [disabled]="loadingOptions()">
-              @for (supply of supplies(); track supply.id) {
-              <mat-option [value]="supply.id">
-                {{ supply.name }} - Stock actual: {{ supply.stock | number: '1.0-3' }} {{ unitLabel(supply.unit) }}
-              </mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
+          <div class="production-form__row" [formGroupName]="index">
+            <mat-form-field appearance="outline">
+              <mat-label>Insumo</mat-label>
+              <mat-select formControlName="supplyId" [disabled]="loadingOptions()">
+                @for (supply of supplies(); track supply.id) {
+                  <mat-option [value]="supply.id">
+                    {{ supply.name }} - Stock actual: {{ supply.stock | number: '1.0-3' }}
+                    {{ unitLabel(supply.unit) }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Cantidad</mat-label>
-            <input matInput type="number" step="0.001" formControlName="quantity" />
-          </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Cantidad</mat-label>
+              <input matInput type="number" step="0.001" formControlName="quantity" />
+            </mat-form-field>
 
-          <button mat-icon-button type="button" aria-label="Quitar insumo" (click)="removeConsumedSupply(index)">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </div>
+            <button
+              mat-icon-button
+              type="button"
+              aria-label="Quitar insumo"
+              (click)="removeConsumedSupply(index)"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
         }
       </div>
     </section>
@@ -135,32 +148,38 @@
 
       <div formArrayName="lossSupplies" class="production-form__rows">
         @for (group of lossSupplyControls(); track $index; let index = $index) {
-        <div class="production-form__row production-form__row--loss" [formGroupName]="index">
-          <mat-form-field appearance="outline">
-            <mat-label>Insumo</mat-label>
-            <mat-select formControlName="supplyId" [disabled]="loadingOptions()">
-              @for (supply of supplies(); track supply.id) {
-              <mat-option [value]="supply.id">
-                {{ supply.name }} - Stock actual: {{ supply.stock | number: '1.0-3' }} {{ unitLabel(supply.unit) }}
-              </mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
+          <div class="production-form__row production-form__row--loss" [formGroupName]="index">
+            <mat-form-field appearance="outline">
+              <mat-label>Insumo</mat-label>
+              <mat-select formControlName="supplyId" [disabled]="loadingOptions()">
+                @for (supply of supplies(); track supply.id) {
+                  <mat-option [value]="supply.id">
+                    {{ supply.name }} - Stock actual: {{ supply.stock | number: '1.0-3' }}
+                    {{ unitLabel(supply.unit) }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Cantidad</mat-label>
-            <input matInput type="number" step="0.001" formControlName="quantity" />
-          </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Cantidad</mat-label>
+              <input matInput type="number" step="0.001" formControlName="quantity" />
+            </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Motivo</mat-label>
-            <input matInput formControlName="reason" autocomplete="off" />
-          </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Motivo</mat-label>
+              <input matInput formControlName="reason" autocomplete="off" />
+            </mat-form-field>
 
-          <button mat-icon-button type="button" aria-label="Quitar merma" (click)="removeLossSupply(index)">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </div>
+            <button
+              mat-icon-button
+              type="button"
+              aria-label="Quitar merma"
+              (click)="removeLossSupply(index)"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
         }
       </div>
     </section>
@@ -176,30 +195,41 @@
 
         <div class="production-form__stock-items">
           @for (item of supplyStockSummaries(); track item.supply.id) {
-          <article class="production-form__stock-item" [class.production-form__stock-item--error]="item.overStock">
-            <div>
-              <span>Insumo</span>
-              <strong>{{ item.supply.name }}</strong>
-            </div>
+            <article
+              class="production-form__stock-item"
+              [class.production-form__stock-item--error]="item.overStock"
+            >
+              <div>
+                <span>Insumo</span>
+                <strong>{{ item.supply.name }}</strong>
+              </div>
 
-            <div>
-              <span>Disponible</span>
-              <strong>{{ item.supply.stock | number: '1.0-3' }} {{ unitLabel(item.supply.unit) }}</strong>
-            </div>
+              <div>
+                <span>Disponible</span>
+                <strong
+                  >{{ item.supply.stock | number: '1.0-3' }}
+                  {{ unitLabel(item.supply.unit) }}</strong
+                >
+              </div>
 
-            <div>
-              <span>Solicitado</span>
-              <strong>{{ item.requested | number: '1.0-3' }} {{ unitLabel(item.supply.unit) }}</strong>
-              <small>
-                Usado: {{ item.consumed | number: '1.0-3' }} · Merma: {{ item.loss | number: '1.0-3' }}
-              </small>
-            </div>
+              <div>
+                <span>Solicitado</span>
+                <strong
+                  >{{ item.requested | number: '1.0-3' }} {{ unitLabel(item.supply.unit) }}</strong
+                >
+                <small>
+                  Usado: {{ item.consumed | number: '1.0-3' }} · Merma:
+                  {{ item.loss | number: '1.0-3' }}
+                </small>
+              </div>
 
-            <div>
-              <span>Restante</span>
-              <strong>{{ item.remaining | number: '1.0-3' }} {{ unitLabel(item.supply.unit) }}</strong>
-            </div>
-          </article>
+              <div>
+                <span>Restante</span>
+                <strong
+                  >{{ item.remaining | number: '1.0-3' }} {{ unitLabel(item.supply.unit) }}</strong
+                >
+              </div>
+            </article>
           }
         </div>
       </section>
@@ -213,11 +243,17 @@
     <footer class="app-form-dialog__actions">
       <button mat-button type="button" [disabled]="saving()" (click)="close()">Cancelar</button>
 
-      <button mat-flat-button type="submit" [disabled]="saving() || loadingOptions() || form.invalid || productionValidationError() != null">
+      <button
+        mat-flat-button
+        type="submit"
+        [disabled]="
+          saving() || loadingOptions() || form.invalid || productionValidationError() != null
+        "
+      >
         @if (saving()) {
-        Guardando...
+          Guardando...
         } @else {
-        Registrar producción
+          Registrar producción
         }
       </button>
     </footer>
