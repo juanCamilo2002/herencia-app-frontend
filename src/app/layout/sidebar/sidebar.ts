@@ -9,6 +9,7 @@ import {
   APP_NAVIGATION_ENTRIES,
   AppNavigationEntry,
   AppNavigationGroup,
+  canAccessNavigationItem,
 } from '../../core/navigation/app-navigation';
 
 @Component({
@@ -30,7 +31,9 @@ export class Sidebar {
   protected readonly visibleEntries = computed(() =>
     APP_NAVIGATION_ENTRIES.reduce<AppNavigationEntry[]>((entries, entry) => {
       if (entry.type === 'item') {
-        if (this.session.hasPermission(entry.permission)) {
+        if (
+          canAccessNavigationItem(entry, (permission) => this.session.hasPermission(permission))
+        ) {
           entries.push(entry);
         }
 
@@ -38,7 +41,7 @@ export class Sidebar {
       }
 
       const visibleItems = entry.items.filter((item) =>
-        this.session.hasPermission(item.permission),
+        canAccessNavigationItem(item, (permission) => this.session.hasPermission(permission)),
       );
 
       if (visibleItems.length > 0) {
@@ -111,6 +114,7 @@ export class Sidebar {
   }
 
   private isActiveRoute(currentUrl: string, route: string) {
-    return currentUrl === route || currentUrl.startsWith(`${route}/`);
+    const path = currentUrl.split(/[?#]/, 1)[0];
+    return path === route || path.startsWith(`${route}/`);
   }
 }

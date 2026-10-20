@@ -1,20 +1,24 @@
 <section class="page">
-  <header class="page__header">
-    <div>
-      <span class="page__eyebrow">Catálogo</span>
-      <h1 class="page__title">Productos</h1>
-      <p class="page__subtitle">
-        Administra los artículos que vendes o produces, sus precios y disponibilidad.
-      </p>
-    </div>
-    <div class="page__actions">
-      @if (canCreateProduct()) {
-        <button mat-flat-button type="button" (click)="openCreateProductDialog()">
-          <mat-icon>add</mat-icon>Nuevo producto
-        </button>
+  @if (!embedded() || canCreateProduct()) {
+    <header class="page__header" [class.catalog-section__actions]="embedded()">
+      @if (!embedded()) {
+        <div>
+          <span class="page__eyebrow">Catálogo</span>
+          <h1 class="page__title">Productos</h1>
+          <p class="page__subtitle">
+            Administra los artículos que vendes o produces, sus precios y disponibilidad.
+          </p>
+        </div>
       }
-    </div>
-  </header>
+      <div class="page__actions">
+        @if (canCreateProduct()) {
+          <button mat-flat-button type="button" (click)="openCreateProductDialog()">
+            <mat-icon>add</mat-icon>Nuevo producto
+          </button>
+        }
+      </div>
+    </header>
+  }
   @if (summary()) {
     <section class="data-stats" aria-label="Estadísticas globales de productos">
       <app-metric-card

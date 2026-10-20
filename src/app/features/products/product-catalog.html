@@ -1,0 +1,32 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <span class="page__eyebrow">Catálogo</span>
+      <h1 class="page__title">Productos</h1>
+      <p class="page__subtitle">Administra los artículos y su clasificación.</p>
+    </div>
+  </header>
+  <mat-tab-group
+    [selectedIndex]="selectedIndex()"
+    (selectedIndexChange)="selectTab($event)"
+    [preserveContent]="true"
+    [dynamicHeight]="true"
+    [mat-stretch-tabs]="false"
+    mat-align-tabs="end"
+    animationDuration="0ms"
+  >
+    @for (tab of tabs(); track tab.id) {
+      <mat-tab [label]="tab.label">
+        <ng-template matTabContent>
+          <div class="catalog__content">
+            @if (tab.id === 'products') {
+              <app-products [embedded]="true" [categoryRevision]="categoryRevision()" />
+            } @else {
+              <app-product-categories [embedded]="true" (categoriesChanged)="categoryChanged()" />
+            }
+          </div>
+        </ng-template>
+      </mat-tab>
+    }
+  </mat-tab-group>
+</section>

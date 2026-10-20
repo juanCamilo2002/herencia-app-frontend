@@ -37,17 +37,14 @@ export const routes: Routes = [
       {
         path: 'products',
         canActivate: [permissionGuard],
-        data: { permission: 'products:read' },
-        loadComponent: () => import('./features/products/products').then((m) => m.Products),
+        data: { anyPermissions: ['products:read', 'product-categories:read'] },
+        loadComponent: () =>
+          import('./features/products/product-catalog').then((m) => m.ProductCatalog),
       },
       {
         path: 'product-categories',
-        canActivate: [permissionGuard],
-        data: { permission: 'product-categories:read' },
-        loadComponent: () =>
-          import('./features/product-categories/product-categories').then(
-            (m) => m.ProductCategories,
-          ),
+        pathMatch: 'full',
+        redirectTo: '/products?tab=categories',
       },
       {
         path: 'customers',

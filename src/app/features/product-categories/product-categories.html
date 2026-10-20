@@ -1,16 +1,20 @@
 <section class="page">
-  <header class="page__header">
-    <div>
-      <span class="page__eyebrow">Catálogo</span>
-      <h1 class="page__title">Categorías de productos</h1>
-      <p class="page__subtitle">Clasifica los artículos que vendes o produces.</p>
-    </div>
-    @if (can('create')) {
-      <button mat-flat-button type="button" [disabled]="changing()" (click)="edit()">
-        <mat-icon>add</mat-icon>Nueva categoría
-      </button>
-    }
-  </header>
+  @if (!embedded() || can('create')) {
+    <header class="page__header" [class.catalog-section__actions]="embedded()">
+      @if (!embedded()) {
+        <div>
+          <span class="page__eyebrow">Catálogo</span>
+          <h1 class="page__title">Categorías de productos</h1>
+          <p class="page__subtitle">Clasifica los artículos que vendes o produces.</p>
+        </div>
+      }
+      @if (can('create')) {
+        <button mat-flat-button type="button" [disabled]="changing()" (click)="edit()">
+          <mat-icon>add</mat-icon>Nueva categoría
+        </button>
+      }
+    </header>
+  }
   <section class="data-panel" [attr.aria-busy]="loading() || changing()">
     <div class="data-panel__header">
       <div>

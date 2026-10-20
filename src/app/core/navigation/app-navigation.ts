@@ -4,6 +4,7 @@ export type AppNavigationItem = {
   icon: string;
   route: string;
   permission: string;
+  anyPermissions?: readonly string[];
 };
 
 export type AppNavigationGroup = {
@@ -15,6 +16,14 @@ export type AppNavigationGroup = {
 };
 
 export type AppNavigationEntry = AppNavigationItem | AppNavigationGroup;
+
+export function canAccessNavigationItem(
+  item: AppNavigationItem,
+  hasPermission: (permission: string) => boolean,
+) {
+  const permissions = item.anyPermissions?.length ? item.anyPermissions : [item.permission];
+  return permissions.some(hasPermission);
+}
 
 export const APP_NAVIGATION_ENTRIES: AppNavigationEntry[] = [
   {
@@ -72,13 +81,7 @@ export const APP_NAVIGATION_ENTRIES: AppNavigationEntry[] = [
         icon: 'inventory_2',
         route: '/products',
         permission: 'products:read',
-      },
-      {
-        type: 'item',
-        label: 'Categorías de productos',
-        icon: 'category',
-        route: '/product-categories',
-        permission: 'product-categories:read',
+        anyPermissions: ['products:read', 'product-categories:read'],
       },
       {
         type: 'item',

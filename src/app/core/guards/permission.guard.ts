@@ -3,12 +3,18 @@ import { CanActivateFn, Router } from '@angular/router';
 import { map } from 'rxjs';
 import { AuthUser } from '../../features/auth/data-access/auth.model';
 import { AuthSessionService } from '../auth/auth-session.service';
-import { APP_NAVIGATION_ITEMS } from '../navigation/app-navigation';
+import { APP_NAVIGATION_ITEMS, canAccessNavigationItem } from '../navigation/app-navigation';
 
 export const permissionGuard: CanActivateFn = (route, state) => {
   const session = inject(AuthSessionService);
   const router = inject(Router);
   const permission = route.data?.['permission'] as string | undefined;
+  const anyPermissions = route.data?.['anyPermissions'] as readonly string[] | undefined;
+  const requiredPermissions = anyPermissions?.length
+    ? anyPermissions
+    : permission
+      ? [permission]
+      : [];
 
   const loginTree = () =>
     router.createUrlTree(['/login'], {
@@ -20,17 +26,19 @@ export const permissionGuard: CanActivateFn = (route, state) => {
       return loginTree();
     }
 
-    if (!permission) {
+    if (requiredPermissions.length === 0) {
       return true;
     }
 
     const permissions = new Set(user.permissions ?? []);
 
-    if (permissions.has(permission)) {
+    if (requiredPermissions.some((required) => permissions.has(required))) {
       return true;
     }
 
-    const fallback = APP_NAVIGATION_ITEMS.find((item) => permissions.has(item.permission));
+    const fallback = APP_NAVIGATION_ITEMS.find((item) =>
+      canAccessNavigationItem(item, (required) => permissions.has(required)),
+    );
 
     return fallback ? router.createUrlTree([fallback.route]) : loginTree();
   };

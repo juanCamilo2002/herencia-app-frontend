@@ -2,6 +2,10 @@
   display: block;
 }
 
+.catalog-section__actions {
+  justify-content: flex-end;
+}
+
 .product-filters {
   display: flex;
   flex-wrap: wrap;

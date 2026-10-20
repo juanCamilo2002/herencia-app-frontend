@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, input, OnInit, output, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
@@ -23,6 +23,8 @@ import { CategoryFormDialog } from './category-form-dialog/category-form-dialog'
   styleUrl: './product-categories.scss',
 })
 export class ProductCategories implements OnInit {
+  readonly embedded = input(false);
+  readonly categoriesChanged = output<void>();
   private readonly service = inject(ProductCategoryService);
   private readonly session = inject(AuthSessionService);
   private readonly dialog = inject(MatDialog);
@@ -73,7 +75,10 @@ export class ProductCategories implements OnInit {
       .afterClosed()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((saved) => {
-        if (saved) this.load();
+        if (saved) {
+          this.load();
+          this.categoriesChanged.emit();
+        }
       });
   }
   protected changeActive(category: ProductCategory) {
@@ -104,6 +109,7 @@ export class ProductCategories implements OnInit {
                 rows.map((row) => (row.id === updated.id ? updated : row)),
               );
               this.changing.set(false);
+              this.categoriesChanged.emit();
               this.toast.success('Categoría actualizada.');
             },
             error: (error) => {

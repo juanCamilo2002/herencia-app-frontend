@@ -4,8 +4,11 @@ import {
   computed,
   DestroyRef,
   inject,
+  input,
+  OnChanges,
   OnInit,
   signal,
+  SimpleChanges,
   TemplateRef,
   viewChild,
 } from '@angular/core';
@@ -56,7 +59,9 @@ import { AuthSessionService } from '../../core/auth/auth-session.service';
   styleUrl: './products.scss',
   templateUrl: './products.html',
 })
-export class Products implements OnInit {
+export class Products implements OnInit, OnChanges {
+  readonly embedded = input(false);
+  readonly categoryRevision = input(0);
   private readonly productService = inject(ProductService);
   private readonly dialog = inject(MatDialog);
   private readonly toast = inject(ToastService);
@@ -76,6 +81,7 @@ export class Products implements OnInit {
   });
   private listRequest?: Subscription;
   private summaryRequest?: Subscription;
+  private categoryRequest?: Subscription;
   protected readonly summaryLoading = signal(true);
   protected readonly summaryError = signal<string | null>(null);
 
@@ -121,6 +127,11 @@ export class Products implements OnInit {
     () => this.canUpdateProduct() || this.canDeleteProduct(),
   );
 
+  ngOnChanges(changes: SimpleChanges): void {
+    const revisionChange = changes['categoryRevision'];
+    if (revisionChange && !revisionChange.firstChange) this.loadCategories();
+  }
+
   ngOnInit(): void {
     this.loadCategories();
     this.loadSummary();
@@ -144,7 +155,7 @@ export class Products implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (page) => {
-          this.products.set(page.content);
+          this.products.set(this.withCategoryMetadata(page.content));
           this.totalElements.set(page.totalElements);
           if (
             page.content.length === 0 &&
@@ -190,15 +201,16 @@ export class Products implements OnInit {
   }
 
   protected loadCategories() {
-    if (this.categoriesLoading()) return;
+    this.categoryRequest?.unsubscribe();
     this.categoriesLoading.set(true);
     this.categoriesError.set(false);
-    this.categoryService
+    this.categoryRequest = this.categoryService
       .options(true)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (categories) => {
           this.categories.set(categories);
+          this.products.update((products) => this.withCategoryMetadata(products));
           this.categoriesLoading.set(false);
         },
         error: () => {
@@ -206,6 +218,16 @@ export class Products implements OnInit {
           this.categoriesLoading.set(false);
         },
       });
+  }
+
+  private withCategoryMetadata(products: Product[]) {
+    const categoriesById = new Map(this.categories().map((category) => [category.id, category]));
+    return products.map((product) => {
+      const category = product.categoryId ? categoriesById.get(product.categoryId) : undefined;
+      return category
+        ? { ...product, categoryName: category.name, categoryActive: category.active }
+        : product;
+    });
   }
 
   protected applyFilters() {

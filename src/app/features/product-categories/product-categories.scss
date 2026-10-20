@@ -1,6 +1,10 @@
 :host {
   display: block;
 }
+
+.catalog-section__actions {
+  justify-content: flex-end;
+}
 table {
   table-layout: fixed;
 }
